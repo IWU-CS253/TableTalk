@@ -47,9 +47,13 @@ A Team Contract is a document prepared by each team prior to starting work on gr
 ### D. Personal Accountability:
 
 1. **Expected individual attendance, punctuality, and participation at all team meetings:**
+    It is expected that all group members will be at every class and team meeting. If personal reasons do not allow, the team member will send a text in advance and still complete the work before the deadline date.
 2. **Expected level of responsibility for fulfilling team assignments, timelines, and deadlines:**
+    It is expected that team members will complete the work before the deadline and communicate clearly if not. They are expected to reach out to team members and teacher/TA if needing of help in an appropriate time manner. 
 3. **Expected level of communication with other team members:**
+    Text message or email
 4. **Expected level of commitment to team decisions and tasks.**
+    Every teammate inserts an opinion and respects that decisions of other members.
 
 ### E. Consequences of breach of contract:
 
