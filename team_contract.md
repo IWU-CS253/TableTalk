@@ -18,7 +18,8 @@ A Team Contract is a document prepared by each team prior to starting work on gr
 	Tuesday's at 11:30 AM, somewhere in CNS.
 5. **Usual method of communication** (e.g., email, cell phone, chat, in person):
 	Text.
-|  Team Member Name  |      E-Mail      | Telephone/Other Contact Info |
+
+| Team Member Name   | E-Mail           | Telephone/Other Contact Info |
 |--------------------|------------------|------------------------------|
 | Emory Cooley       | ecooley@iwu.edu  |                              |
 | Jillian Bollard    | jbollard@iwu.edu |                              |
