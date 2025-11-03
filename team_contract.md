@@ -8,33 +8,41 @@ A Team Contract is a document prepared by each team prior to starting work on gr
 
 ### A. Team Structure:
 
-1. **Leadership structure**:
-	Leader rotates weekly, specify rotation here.
-2. **Decision-making policy** (by consensus? by majority vote? how will tie votes be handled?):
+1. **Leadership structure**
+	Leader rotates weekly, Jillian, Emory, Keshav, then Demarco.
+2. **Decision-making policy**
+	Decisions to resolve a dissagreement are made by majority vote, ties side twards Jillian's vote.
 3. **Who is the team Recorder/Documentation Manager/Maintainer of all required turn-ins?**
-4. **Day, time, and place for regular team meetings:**
+	Jillian Bollard
+4. **Day, time, and place for regular team meetings:** 
+	Tuesday's at 11:30 AM, somewhere in CNS.
 5. **Usual method of communication** (e.g., email, cell phone, chat, in person):
-
-| Team Member Name |      E-Mail      | Telephone/Other Contact Info |
-|------------------|------------------|------------------------------|
-| Emory Cooley     | ecooley@iwu.edu  | 815-616-9308                 |
-| Jillian Bollard  | jbollard@iwu.edu |                              |
-| Demarco          |                  |                              |
-| Keshav           |                  |                              |
-|                  |                  |                              |
+	Text.
+|  Team Member Name  |      E-Mail      | Telephone/Other Contact Info |
+|--------------------|------------------|------------------------------|
+| Emory Cooley       | ecooley@iwu.edu  |                              |
+| Jillian Bollard    | jbollard@iwu.edu |                              |
+| Demarco Hunter     | dhunter@iwu.edu  |                              |
+| Keshav Seetharaman | kseethar@iwu.edu |                              |
 
 
 ### B. Team Procedures:
 
-1. **Method for setting and following meeting agendas** (Who will set each agenda? When? How will team members be notified/reminded? Who will be responsible for the team following the agenda during a team meeting?):
-2. **Method of record keeping** (Who will be responsible for recording and disseminating minutes? How and when will the minutes be disseminated? Where will all agendas and minutes be stored?):
-3. **Procedures in the absence of a team member** (will the team meet with one member absent, or must all members be present?):
+1. **Method for setting and following meeting agendas**
+	The group will review what needs to be accomplished. During the meeting we will divy up the tasks. Each member is responsible for completeing their tasks by the agreed upon time.
+2. **Method of record keeping**
+	When working on the project, the team member working is responcible for documenting the time that they worked in our shared google spreadsheet.
+3. **Procedures in the absence of a team member**
+	The team will still meet if a member is absent.
 
 ### C. Team Participation:
 
 1. **Strategies to ensure cooperation and equal distribution of tasks:**
-2. **Strategies for encouraging/including ideas from all team members** (team maintenance):
-3. **Strategies for keeping on task** (task maintenance):
+	When meeting each week, tasks will be distributed in the most fair way possible. If later it is discovered that someone needs help or has an abundance of work compaired to the rest of the team, they can get help from the other members.
+2. **Strategies for encouraging/including ideas from all team members**
+	All ideas are welcome from all memebers and can be voted on by the team to be implemented.
+3. **Strategies for keeping on task**
+	During class time assigned to work on the project, only work on the project. Complete all tasks by the assigned deadline.
 
 ### D. Personal Accountability:
 
