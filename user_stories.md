@@ -21,12 +21,14 @@ OFFICIAL TABLETALK USER STORIES
 		Users can access and edit their profile and settings.
 		Users can view, edit, and add to their posts.
 	Users will remain signed in until they logout or close all instances of the website open.
-5. As a User, I want quick redirection options to ALL available pages.
+3. As a User, I want quick redirection options to ALL available pages.
+   
 	Create a fixed navigation bar
 	Have options in bar for all available pages (cart, main feed, user profile)
 	On a click redirect the user to that rendered html file
 	Use app.py file to create all the route possible for users to take
-6. As a User, I want to be able to post recipes, so that other users can make them and comment on them.
+4. As a User, I want to be able to post recipes, so that other users can make them and comment on them.
+   
 	Users can post a new recipe by clicking the make a new post button.
 	A recipe post must include:
 		A title
@@ -36,19 +38,22 @@ OFFICIAL TABLETALK USER STORIES
 		The estimated cook time
 	Users can edit and delete their posts.
 	After posting, the recipe is added to both the main feed and the user’s profile.
-7. As a User, I want to be able to upload images of my recipe so people can view.
+5. As a User, I want to be able to upload images of my recipe so people can view.
+   
 	Click “Upload Image” button
 	Use a software which allows device image upload
 	Specify which image you want to post
 	Make sure image type is supported and in appropriate size
 	Click “Post” button
 	Make sure all fields are filled in and make image optional
-8. As a User, I want to see my own recipes.
+6. As a User, I want to see my own recipes.
+   
 	In the user’s profile, a list of all their recipe cards
 	Available drop down to search or filter their own posts (with same set up as above)
 	At top of their profile have a live count attribute of how many recipes they have on their profile
 	If they have no recipes, leave a prompt saying “Start by posting your first recipe now!” 
-9. As a User, I want to be able to filter through posts, so that I can find which recipes I want to make or save.
+7. As a User, I want to be able to filter through posts, so that I can find which recipes I want to make or save.
+   
 	A search bar will be on a persistent header bar above the posts feed.
 	Users can search posts by:
 		The recipe name.
@@ -57,31 +62,37 @@ OFFICIAL TABLETALK USER STORIES
 		Appliances needed or food types.
 	Search results display posts that fit the search sorted by relevance or recency.
 	Users can click on a result to bring them to the post.
-10. As a User, I want to be able to select the appliances and materials I own, so that I can filter posts that I can make with what I have.
+8. As a User, I want to be able to select the appliances and materials I own, so that I can filter posts that I can make with what I have.
+
 	Users can list their appliances and materials in their profile settings.
 	Posts are tagged with the appliances and materials needed to make the recipe.
 	The by default in the search filter, recipes requiring unavailable equipment are hidden.
 	Users can update their appliances at anytime.
-11. As a User, I want to be able to comment on posts, so that I can give feedback and recommendations to the poster.
+9. As a User, I want to be able to comment on posts, so that I can give feedback and recommendations to the poster.
+
 	Each post includes a comments section.
 	Users must be logged in to comment.
 	Comments display the username, message, and time it was made.
 	All logged in users can reply to or like comments.
 	Users can edit and delete their own comments.
-12. As a User, I want to be able to follow and friend other users, so that I can see and stay up to date on new recipes they post.
+10. As a User, I want to be able to follow and friend other users, so that I can see and stay up to date on new recipes they post.
+    
 	A follow button can be found on user profiles.
 	Following a user adds their posts to the follower’s feed.
 	Users who follow each other are friends.
 	Notifications are sent when followed users post new recipes or comment on your post.
-13. As a User, I want to enter a “cook” mode that I can follow easy step-by-step instructions while cooking
+11. As a User, I want to enter a “cook” mode that I can follow easy step-by-step instructions while cooking.
+    
 	When clicking “Cook” button text enlarges and hides other elements of the page (most commonly in a popup)
 	Only displays one step at a time.
 	Users can navigate between steps with a “next” and “back” button.
-14. As a Creator, I want to implement the Instacart API available so users can use the car list to directly make an InstaCart order.
+12. As a Creator, I want to implement the Instacart API available so users can use the car list to directly make an InstaCart order.
+    
 	Research InstaCart API
 	Store and imbed the API in the cart tab so it keeps the same familiar look as the previous application set up
 	Allow users when they press “Cook It!” to add all ingredients to an InstaCart order rather than their cart list
-15. As a User, I want to be able to save the ingredients of a recipe, so I know what I have to buy at the store, but keep the ingredients for each recipe separated so I can prioritize the recipes I want to make most.
+13. As a User, I want to be able to save the ingredients of a recipe, so I know what I have to buy at the store, but keep the ingredients for each recipe separated so I can prioritize the recipes I want to make most.
+
 	Each recipe card has a “Cook It” button which saves ingredients to the shopping cart
 	The shopping list is categorized as an ordered list to specify how many recipes I have saved
 	Within each ordered list element, there will be an embedded unordered list with all the ingredients per recipe
