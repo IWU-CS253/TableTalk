@@ -1,4 +1,6 @@
 TableTalk Iteration Plan
+*DONT FORGET TO LOG YOUR HOURS ON THE GOOGLE SHEET*
+
 Full Time Workers:
 -Demarco (Front End Development)
 -Keshav (Backend Development)
