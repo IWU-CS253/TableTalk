@@ -66,7 +66,7 @@ OFFICIAL TABLETALK USER STORIES
 
 	Users can list their appliances and materials in their profile settings.
 	Posts are tagged with the appliances and materials needed to make the recipe.
-	The by default in the search filter, recipes requiring unavailable equipment are hidden.
+	The default in the search filter, recipes requiring unavailable equipment are shown until requested otherwise.
 	Users can update their appliances at anytime.
 9. As a User, I want to be able to comment on posts, so that I can give feedback and recommendations to the poster.
 
