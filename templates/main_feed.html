@@ -1,4 +1,54 @@
 {% extends "layout.html" %}
-{% block body %}
 
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <! Sidebar for Friends>
+        <div class="col-md-3">
+            <h5 class="mb-3">Suggested Friends</h5>
+            <ul class="list-group">
+                {% for friend in suggested_friends %}
+                <li class="list-group-item d-flex align-items-center">
+                    <i class="bi bi-emoji-smile friend-icon"></i>
+                    {{ friend.name }} ({{ friend.username }})
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <! Main Feed>
+        <div class="col-md-9">
+
+            <h5 class="mb-3">Main Feed</h5>
+
+            {% for post in posts %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <strong>{{ post.author }}</strong> ({{ post.category }})
+                </div>
+                <div class="card-body">
+
+
+                    <! I think this is where we will enter the recipe information>
+
+
+                    <! Filter Dropdown>
+                    <select class="form-select w-auto">
+                        <option selected>STYLE...</option>
+                        <option>American</option>
+                        <option>Chinese</option>
+                        <option>Greek</option>
+                        <option>Indian</option>
+                        <option>Italian (Pizza)</option>
+                        <option>Italian (Pasta)</option>
+                        <option>Mexican</option>
+                        <option>Seafood</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 {% endblock %}
