@@ -82,7 +82,6 @@ def sign_up():
             flash('Username is already taken')
             return render_template('new_user_sign_up.html')
     else:
-        flash('Invalid username or password')
         return render_template('new_user_sign_up.html')
 
 @app.route('/show_feed', methods=['post'])
@@ -95,6 +94,10 @@ def show_feed():
     else:
         flash('Invalid username or password')
         return render_template('login.html')
+
+@app.route('/cart', methods=['post'])
+def show_cart():
+    return render_template('cart.html')
 
 @app.route('/user_profile', methods=['post'])
 def show_profile():
@@ -111,4 +114,3 @@ def show_profile():
     else:
         flash('Their username is needed load their profile')
         return redirect(url_for('show_feed'))
-
