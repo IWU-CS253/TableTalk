@@ -96,3 +96,19 @@ def show_feed():
         flash('Invalid username or password')
         return render_template('login.html')
 
+@app.route('/user_profile', methods=['post'])
+def show_profile():
+    if "username" in request.args:
+        db = get_db()
+        cur = db.execute('SELECT id FROM accounts WHERE username = ?',
+                         [request.form['username']])
+        user = cur.fetchone()
+        if user is not None:
+            return render_template('user_profile.html', user=user)
+        else:
+            flash('User does not exist')
+            return redirect(url_for('show_feed'))
+    else:
+        flash('Their username is needed load their profile')
+        return redirect(url_for('show_feed'))
+
