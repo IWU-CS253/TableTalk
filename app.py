@@ -44,11 +44,22 @@ def close_db(error):
     if hasattr(g, 'sqlite_db'):
         g.sqlite_db.close()
 
-@app.route('/')
-def show_feed():
-    db = get_db()
+@app.route('/login')
+def login():
     if "username" in request.args and "password" in request.args:
-        cur = db.execute('SELECT id FROM posts')
+        db = get_db()
+        cur = db.execute('SELECT id FROM accounts WHERE username = ? AND password = ?',
+                         [request.form['username'], request.form['password']])
+        user = cur.fetchone()
+        if user is not None:
+            flash('Successfully logged into account')
+            return redirect(url_for('show_feed'))
+        else:
+            flash('Username does not exist')
+            return render_template('login.html')
+    else:
+        flash('Invalid username or password')
+        return render_template('login.html')
 
 @app.route('/sign_up', methods=['post'])
 def sign_up():
@@ -69,3 +80,15 @@ def sign_up():
     else:
         flash('Invalid username or password')
         return render_template('new_user_sign_up.html')
+
+@app.route('/show_feed', methods=['post'])
+def show_feed():
+    db = get_db()
+    if "username" in request.args and "password" in request.args:
+        cur = db.execute('SELECT id, title FROM posts ORDER BY id DESC')
+        feed = cur.fetchall()
+        return render_template('main_feed', feed=feed)
+    else:
+        flash('Invalid username or password')
+        return render_template('login.html')
+
