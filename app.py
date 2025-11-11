@@ -114,3 +114,7 @@ def show_profile():
     else:
         flash('Their username is needed load their profile')
         return redirect(url_for('show_feed'))
+
+@app.route('/recipe', methods=['post'])
+def show_recipe_card():
+    return render_template('recipe_card.html')
