@@ -44,6 +44,10 @@ def close_db(error):
     if hasattr(g, 'sqlite_db'):
         g.sqlite_db.close()
 
+@app.route('/')
+def welcome_page():
+    return render_template('login.html')
+
 @app.route('/login')
 def login():
     if "username" in request.args and "password" in request.args:
