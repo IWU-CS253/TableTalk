@@ -48,7 +48,7 @@ def close_db(error):
 def welcome_page():
     return render_template('login.html')
 
-@app.route('/login')
+@app.route('/login', methods=['post'])
 def login():
     if "username" in request.args and "password" in request.args:
         db = get_db()
