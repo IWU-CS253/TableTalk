@@ -1,6 +1,6 @@
 import os
 from sqlite3 import dbapi2 as sqlite3
-from flask import Flask, request, g, redirect, url_for, render_template, flash
+from flask import Flask, request, g, redirect, url_for, render_template, flash, get_flashed_messages
 
 app = Flask(__name__)
 
@@ -56,13 +56,16 @@ def login():
                          [request.form['username'], request.form['password']])
         user = cur.fetchone()
         if user is not None:
-            flash('Successfully logged into account')
+            flash("Successfully logged into account", "info")
+            print(get_flashed_messages(True))
             return redirect(url_for('show_feed'))
         else:
-            flash('Username does not exist')
+            flash("Username does not exist", "error")
+            print(get_flashed_messages(True))
             return render_template('login.html')
     else:
-        flash('Invalid username or password')
+        flash("Invalid username or password", "error")
+        print(get_flashed_messages(True))
         return render_template('login.html')
 
 @app.route('/sign_up', methods=['post'])
@@ -76,10 +79,12 @@ def sign_up():
             db.execute('INSERT INTO accounts (username, password) VALUES (?, ?)',
                        [request.form['username'], request.form['password']])
             db.commit()
-            flash('New account successfully registered')
+            flash("New account successfully registered", "info")
+            print(get_flashed_messages(True))
             return redirect(url_for('show_feed'))
         else:
-            flash('Username is already taken')
+            flash("Username is already taken", "warning")
+            print(get_flashed_messages(True))
             return render_template('new_user_sign_up.html')
     else:
         return render_template('new_user_sign_up.html')
@@ -92,7 +97,8 @@ def show_feed():
         feed = cur.fetchall()
         return render_template('main_feed', feed=feed)
     else:
-        flash('Invalid username or password')
+        flash("Invalid username or password", "error")
+        print(get_flashed_messages(True))
         return render_template('login.html')
 
 @app.route('/cart', methods=['post'])
@@ -109,10 +115,12 @@ def show_profile():
         if user is not None:
             return render_template('user_profile.html', user=user)
         else:
-            flash('User does not exist')
+            flash("User does not exist", "error")
+            print(get_flashed_messages(True))
             return redirect(url_for('show_feed'))
     else:
-        flash('Their username is needed load their profile')
+        flash("Their username is needed load their profile", "error")
+        print(get_flashed_messages(True))
         return redirect(url_for('show_feed'))
 
 @app.route('/recipe', methods=['post'])
