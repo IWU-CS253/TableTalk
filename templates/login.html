@@ -50,7 +50,7 @@
     <! Pre-existing account log in section>
     <div class="login-container">
         <div class="logo">WELCOME TO TABLETALK</div>
-        <form method="POST" action="/login">
+        <form method="POST" action="{{ url_for('login') }}">
             <! Required username submission section>
             <div class="mb-3">
                 <label for="username" class="form-label">USERNAME</label>
@@ -67,8 +67,10 @@
 
     <! Allow new user sign up>
     <div>
-        <textarea>Don't have an account?</textarea>
-        <button type="submit" class="btn btn-login w-100">SIGN UP HERE</button>
+        <form method="POST" action="{{ url_for('sign_up') }}">
+            <textarea>Don't have an account?</textarea>
+            <button type="submit" class="btn btn-login w-100">SIGN UP HERE</button>
+        </form>
     </div>
 
     <! Javascript insertion (not sure if needed yet)>
