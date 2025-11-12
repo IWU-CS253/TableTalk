@@ -68,8 +68,12 @@ def login():
         print(get_flashed_messages(True))
         return render_template('login.html')
 
-@app.route('/sign_up', methods=['post'])
+@app.route('/sign_up')
 def sign_up():
+    return render_template('new_user_sign_up.html')
+
+@app.route('/register_user', methods=['post'])
+def register_user():
     if "username" in request.args and "password" in request.args:
         db = get_db()
         cur = db.execute('SELECT id FROM accounts WHERE username = ?',
