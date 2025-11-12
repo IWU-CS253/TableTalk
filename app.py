@@ -74,14 +74,19 @@ def sign_up():
 
 @app.route('/register_user', methods=['post'])
 def register_user():
-    if "username" in request.args and "password" in request.args:
+    if(
+        "username" in request.args and
+        "password" in request.args and
+        "first_name" in request.args and
+        "last_name" in request.args
+    ):
         db = get_db()
-        cur = db.execute('SELECT id FROM accounts WHERE username = ?',
+        cur = db.execute('SELECT id FROM users WHERE username = ?',
                             [request.form['username']])
         user = cur.fetchone()
         if user is None:
-            db.execute('INSERT INTO accounts (username, password) VALUES (?, ?)',
-                       [request.form['username'], request.form['password']])
+            db.execute('INSERT INTO users (username, password, first_name, last_name) VALUES (?, ?, ?, ?)',
+                       [request.form['username'], request.form['password'], request.form['first_name'], request.form['last_name']])
             db.commit()
             flash("New account successfully registered", "info")
             print(get_flashed_messages(True))
