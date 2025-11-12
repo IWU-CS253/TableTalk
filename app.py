@@ -25,7 +25,7 @@ def init_db():
 
 def check_username_exists(username):
     db = get_db()
-    cursor = db.execute('SELECT id FROM accounts WHERE username = ?', (username,))
+    cursor = db.execute('SELECT id FROM users WHERE username = ?', (username,))
     user = cursor.fetchone()
     return user is not None
 
@@ -52,7 +52,7 @@ def welcome_page():
 def login():
     if "username" in request.args and "password" in request.args:
         db = get_db()
-        cur = db.execute('SELECT id FROM accounts WHERE username = ? AND password = ?',
+        cur = db.execute('SELECT id FROM users WHERE username = ? AND password = ?',
                          [request.form['username'], request.form['password']])
         user = cur.fetchone()
         if user is not None:
@@ -103,7 +103,7 @@ def show_cart():
 def show_profile():
     if "username" in request.args:
         db = get_db()
-        cur = db.execute('SELECT id FROM accounts WHERE username = ?',
+        cur = db.execute('SELECT id FROM users WHERE username = ?',
                          [request.form['username']])
         user = cur.fetchone()
         if user is not None:
