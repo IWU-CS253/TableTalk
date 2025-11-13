@@ -70,7 +70,7 @@
     <div style="text-align: center">
         <! Direct text added to the bottom of the page above the signup for new users button>
         Don't have an account?
-        <button type="submit" class="btn btn-login w-100">SIGN UP HERE</button>
+        <button onclick="window.location.href= '{{ url_for('new_user_sign_up') }}'"type="submit" class="btn btn-login w-100">SIGN UP HERE</button>
     </div>
 
     <! Javascript insertion (not sure if needed yet)>
