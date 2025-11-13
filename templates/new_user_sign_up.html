@@ -3,6 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <title>TableTalk User Sign Up</title>
+    <! Import the same style block from the login.html file to keep consistent formatting>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 80px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: green;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-label {
+            font-weight: bold;
+        }
+        .btn-login {
+            background-color: green;
+            color: white;
+            font-weight: bold;
+        }
+        .footer-logo {
+            text-align: center;
+            margin-top: 40px;
+            color: green;
+            font-size: 1.2rem;
+        }
+        .icon {
+            margin-right: 5px;
+        }
+    </style>
 </head>
 <body>
     <! New user sign up>
@@ -13,6 +52,8 @@
             <div class="mb-3">
                 <label for="first_name" class="form-label">FIRST NAME</label>
                 <input type="text" class="form-control" id="first_name" name="first_name" required>
+            </div>
+            <div>
                 <label for="last_name" class="form-label">LAST NAME</label>
                 <input type="text" class="form-control" id="last_name" name="last_name" required>
             </div>
@@ -26,6 +67,16 @@
                 <label for="password" class="form-label">PASSWORD</label>
                 <input type="password" class="form-control" id="password" name="password" required>
             </div>
+            
+            <! Fun favorite food question to appear on profile>
+            <div>
+                <label for="favorite_food" class="form-label">FAVORITE FOOD</label>
+                <input type="text" class="form-control" id="favorite_food" name="favorite_food" required>
+            </div>
+            <div style="text-align:center">
+                Once signed up, re-log in with your new account information!
+            </div>
+            <! Submit to sign up button>
             <input type="hidden" name="username">
             <input type="hidden" name="password">
             <input type="hidden" name="first_name">
