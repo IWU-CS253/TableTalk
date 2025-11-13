@@ -65,6 +65,12 @@ def login():
         flash('Invalid username or password')
         return render_template('login.html')
 
+
+@app.route('/new_user_sign_up')
+def new_user_sign_up():
+    return render_template("new_user_sign_up.html")
+
+
 @app.route('/sign_up', methods=['post'])
 def sign_up():
     if "username" in request.args and "password" in request.args:
