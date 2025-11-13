@@ -22,12 +22,9 @@ def init_db():
         db.cursor().executescript(f.read())
     db.commit()
 
-
-def check_username_exists(username):
-    db = get_db()
-    cursor = db.execute('SELECT id FROM users WHERE username = ?', (username,))
-    user = cursor.fetchone()
-    return user is not None
+def print_flashes():
+    for message in get_flashed_messages():
+        print(message)
 
 @app.cli.command('initdb')
 def initdb_command():
@@ -50,22 +47,22 @@ def welcome_page():
 
 @app.route('/login', methods=['post'])
 def login():
-    if "username" in request.args and "password" in request.args:
+    if "username" in request.form and "password" in request.form:
         db = get_db()
         cur = db.execute('SELECT id FROM users WHERE username = ? AND password = ?',
                          [request.form['username'], request.form['password']])
         user = cur.fetchone()
         if user is not None:
             flash("Successfully logged into account", "info")
-            print(get_flashed_messages(True))
+            print_flashes()
             return redirect(url_for('show_feed'))
         else:
             flash("Username does not exist", "error")
-            print(get_flashed_messages(True))
+            print_flashes()
             return render_template('login.html')
     else:
         flash("Invalid username or password", "error")
-        print(get_flashed_messages(True))
+        print_flashes()
         return render_template('login.html')
 
 @app.route('/sign_up')
@@ -74,12 +71,7 @@ def sign_up():
 
 @app.route('/register_user', methods=['post'])
 def register_user():
-    if(
-        "username" in request.args and
-        "password" in request.args and
-        "first_name" in request.args and
-        "last_name" in request.args
-    ):
+    if "username" and "password" and "first_name" and "last_name" in request.args:
         db = get_db()
         cur = db.execute('SELECT id FROM users WHERE username = ?',
                             [request.form['username']])
@@ -89,13 +81,15 @@ def register_user():
                        [request.form['username'], request.form['password'], request.form['first_name'], request.form['last_name']])
             db.commit()
             flash("New account successfully registered", "info")
-            print(get_flashed_messages(True))
+            print_flashes()
             return redirect(url_for('show_feed'))
         else:
             flash("Username is already taken", "warning")
-            print(get_flashed_messages(True))
+            print_flashes()
             return render_template('new_user_sign_up.html')
     else:
+        flash("Form arguments missing", "error")
+        print_flashes()
         return render_template('new_user_sign_up.html')
 
 @app.route('/show_feed', methods=['post'])
@@ -107,7 +101,7 @@ def show_feed():
         return render_template('main_feed', feed=feed)
     else:
         flash("Invalid username or password", "error")
-        print(get_flashed_messages(True))
+        print_flashes()
         return render_template('login.html')
 
 @app.route('/cart', methods=['post'])
@@ -125,11 +119,11 @@ def show_profile():
             return render_template('user_profile.html', user=user)
         else:
             flash("User does not exist", "error")
-            print(get_flashed_messages(True))
+            print_flashes()
             return redirect(url_for('show_feed'))
     else:
         flash("Their username is needed load their profile", "error")
-        print(get_flashed_messages(True))
+        print_flashes()
         return redirect(url_for('show_feed'))
 
 @app.route('/recipe', methods=['post'])
