@@ -4,6 +4,9 @@ from flask import Flask, request, g, redirect, url_for, render_template, flash, 
 
 app = Flask(__name__)
 
+# need to figure out how to use this
+app.secret_key = 'your_secret_key'  # Required for session and flash
+
 app.config.update(dict(
     DATABASE=os.path.join(app.root_path, 'tabletalk.db'),
     DEBUG=True,
@@ -53,6 +56,9 @@ def login():
                          [request.form['username'], request.form['password']])
         user = cur.fetchone()
         if user is not None:
+            # update session
+            session['username'] = request.form['username']
+
             flash("Successfully logged into account", "info")
             print_flashes()
             return redirect(url_for('show_feed'))
@@ -66,16 +72,11 @@ def login():
         print_flashes()
         return render_template('login.html')
 
+
 @app.route('/sign_up')
 def sign_up():
     return render_template('new_user_sign_up.html')
 
-
-
-
-
-
-app.secret_key = 'your_secret_key'  # Required for session and flash
 
 @app.route('/register_user', methods=['POST'])
 def register_user():
@@ -106,7 +107,7 @@ def register_user():
         flash("Form arguments missing", "error")
         return render_template('new_user_sign_up.html')
 
-@app.route('/show_feed', methods=['GET'])
+@app.route('/show_feed', methods=['GET', 'POST'])
 def show_feed():
     if 'username' in session:
         db = get_db()
@@ -116,13 +117,6 @@ def show_feed():
     else:
         flash("Please log in to view the feed", "error")
         return render_template('login.html')
-
-
-
-
-
-
-
 
 @app.route('/cart', methods=['POST'])
 def show_cart():
