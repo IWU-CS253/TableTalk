@@ -77,8 +77,8 @@ def register_user():
                             [request.form['username']])
         user = cur.fetchone()
         if user is None:
-            db.execute('INSERT INTO users (username, password, first_name, last_name) VALUES (?, ?, ?, ?)',
-                       [request.form['username'], request.form['password'], request.form['first_name'], request.form['last_name']])
+            db.execute('INSERT INTO users (username, password, first_name, last_name, favorite_food) VALUES (?, ?, ?, ?,?)',
+                       [request.form['username'], request.form['password'], request.form['first_name'], request.form['last_name'], request.form['favorite_food']])
             db.commit()
             flash("New account successfully registered", "info")
             print_flashes()
