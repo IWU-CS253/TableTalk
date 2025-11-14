@@ -51,7 +51,7 @@
     <! Pre-existing account log in section>
     <div class="login-container">
         <div class="logo">WELCOME TO TABLETALK</div>
-        <form method="POST" action="/login">
+        <form method="POST" action="{{ url_for('login') }}">
             <! Required username submission section>
             <div class="mb-3">
                 <label for="username" class="form-label">USERNAME</label>
@@ -62,6 +62,8 @@
                 <label for="password" class="form-label">PASSWORD</label>
                 <input type="password" class="form-control" id="password" name="password" required>
             </div>
+            <input type="hidden" name="username">
+            <input type="hidden" name="password">
             <button type="submit" class="btn btn-login w-100">LOGIN</button>
         </form>
     </div>
@@ -70,7 +72,7 @@
     <div style="text-align: center">
         <! Direct text added to the bottom of the page above the signup for new users button>
         Don't have an account?
-        <button onclick="window.location.href= '{{ url_for('new_user_sign_up') }}'"type="submit" class="btn btn-login w-100">SIGN UP HERE</button>
+        <button onclick="window.location.href= '{{ url_for('sign_up') }}'"type="submit" class="btn btn-login w-100">SIGN UP HERE</button>
     </div>
 
     <! Javascript insertion (not sure if needed yet)>

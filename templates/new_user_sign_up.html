@@ -47,7 +47,7 @@
     <! New user sign up>
     <div class="login-container">
         <div class="logo">NEW USER SIGN UP</div>
-        <form method="POST" action="/login">
+        <form method="POST" action="{{ url_for('register_user') }}">
             <! Required Information Section>
             <div class="mb-3">
                 <label for="first_name" class="form-label">FIRST NAME</label>
@@ -67,6 +67,7 @@
                 <label for="password" class="form-label">PASSWORD</label>
                 <input type="password" class="form-control" id="password" name="password" required>
             </div>
+            
             <! Fun favorite food question to appear on profile>
             <div>
                 <label for="favorite_food" class="form-label">FAVORITE FOOD</label>
@@ -76,6 +77,10 @@
                 Once signed up, re-log in with your new account information!
             </div>
             <! Submit to sign up button>
+            <input type="hidden" name="username">
+            <input type="hidden" name="password">
+            <input type="hidden" name="first_name">
+            <input type="hidden" name="last_name">
             <button type="submit" class="btn btn-login w-100">SIGN UP</button>
         </form>
     </div>
