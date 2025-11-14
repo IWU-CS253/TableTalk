@@ -13,6 +13,11 @@
     </style>
 </head>
 <body>
+    <div>
+        {% for message in get_flashed_messages() %}
+        <div class="flash">{{ message }}</div>
+        {% endfor %}
+    </div>
     <!Fixed Navigation Bar>
     <nav class="navbar navbar-light bg-white shadow-sm px-4">
         <span class="logo">

@@ -1,8 +1,11 @@
 import os
 from sqlite3 import dbapi2 as sqlite3
-from flask import Flask, request, g, redirect, url_for, render_template, flash
+from flask import Flask, request, g, redirect, url_for, render_template, flash, get_flashed_messages, session
 
 app = Flask(__name__)
+
+# need to figure out how to use this
+app.secret_key = 'your_secret_key'  # Required for session and flash
 
 app.config.update(dict(
     DATABASE=os.path.join(app.root_path, 'tabletalk.db'),
@@ -22,12 +25,9 @@ def init_db():
         db.cursor().executescript(f.read())
     db.commit()
 
-
-def check_username_exists(username):
-    db = get_db()
-    cursor = db.execute('SELECT id FROM accounts WHERE username = ?', (username,))
-    user = cursor.fetchone()
-    return user is not None
+def print_flashes():
+    for message in get_flashed_messages():
+        print(message)
 
 @app.cli.command('initdb')
 def initdb_command():
@@ -48,73 +48,98 @@ def close_db(error):
 def welcome_page():
     return render_template('login.html')
 
-@app.route('/login', methods=['post'])
+@app.route('/login', methods=['POST'])
 def login():
-    if "username" in request.args and "password" in request.args:
+    if "username" in request.form and "password" in request.form:
         db = get_db()
-        cur = db.execute('SELECT id FROM accounts WHERE username = ? AND password = ?',
+        cur = db.execute('SELECT id FROM users WHERE username = ? AND password = ?',
                          [request.form['username'], request.form['password']])
         user = cur.fetchone()
         if user is not None:
-            flash('Successfully logged into account')
+            # update session
+            session['username'] = request.form['username']
+
+            flash("Successfully logged into account", "info")
+            print_flashes()
             return redirect(url_for('show_feed'))
         else:
-            flash('Username does not exist')
+            flash("Username does not exist", "error")
+            print_flashes()
+            # this needs to return a flash to users so they know as well not just a flash to the terminal
             return render_template('login.html')
     else:
-        flash('Invalid username or password')
+        flash("Invalid username or password", "error")
+        print_flashes()
         return render_template('login.html')
 
-@app.route('/sign_up', methods=['post'])
+
+@app.route('/sign_up')
 def sign_up():
-    if "username" in request.args and "password" in request.args:
+    return render_template('new_user_sign_up.html')
+
+
+@app.route('/register_user', methods=['POST'])
+def register_user():
+    if all(request.form.get(field) for field in ["username", "password", "first_name", "last_name", "favorite_food"]):
         db = get_db()
-        cur = db.execute('SELECT id FROM accounts WHERE username = ?',
-                            [request.form['username']])
+
+        # make easy access stored variable
+        username = request.form.get('username')
+        password = request.form.get('password')
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        favorite_food = request.form.get('favorite_food')
+
+        cur = db.execute('SELECT id FROM users WHERE username = ?', [username])
         user = cur.fetchone()
+
         if user is None:
-            db.execute('INSERT INTO accounts (username, password) VALUES (?, ?)',
-                       [request.form['username'], request.form['password']])
+            db.execute('INSERT INTO users (username, password, first_name, last_name, favorite_food) VALUES (?, ?, ?, ?, ?)',
+                       [username, password, first_name, last_name, favorite_food])
             db.commit()
-            flash('New account successfully registered')
+            session['username'] = username  # Store user in session
+            flash("New account successfully registered", "info")
             return redirect(url_for('show_feed'))
         else:
-            flash('Username is already taken')
+            flash("Username is already taken", "warning")
             return render_template('new_user_sign_up.html')
     else:
+        flash("Form arguments missing", "error")
         return render_template('new_user_sign_up.html')
 
-@app.route('/show_feed', methods=['post'])
+@app.route('/show_feed', methods=['GET', 'POST'])
 def show_feed():
-    db = get_db()
-    if "username" in request.args and "password" in request.args:
+    if 'username' in session:
+        db = get_db()
         cur = db.execute('SELECT id, title FROM posts ORDER BY id DESC')
         feed = cur.fetchall()
-        return render_template('main_feed', feed=feed)
+        return render_template('main_feed.html', feed=feed)
     else:
-        flash('Invalid username or password')
+        flash("Please log in to view the feed", "error")
         return render_template('login.html')
 
-@app.route('/cart', methods=['post'])
+@app.route('/cart', methods=['POST'])
 def show_cart():
     return render_template('cart.html')
 
-@app.route('/user_profile', methods=['post'])
+@app.route('/user_profile', methods=['POST'])
 def show_profile():
     if "username" in request.args:
         db = get_db()
-        cur = db.execute('SELECT id FROM accounts WHERE username = ?',
+        cur = db.execute('SELECT id FROM users WHERE username = ?',
                          [request.form['username']])
         user = cur.fetchone()
         if user is not None:
             return render_template('user_profile.html', user=user)
         else:
-            flash('User does not exist')
+            flash("User does not exist", "error")
+            print_flashes()
             return redirect(url_for('show_feed'))
     else:
-        flash('Their username is needed load their profile')
+        flash("Their username is needed load their profile", "error")
+        print_flashes()
         return redirect(url_for('show_feed'))
 
-@app.route('/recipe', methods=['post'])
+@app.route('/recipe', methods=['POST'])
 def show_recipe_card():
     return render_template('recipe_card.html')
