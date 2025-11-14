@@ -46,9 +46,21 @@
 <body>
     <! New user sign up>
     <div class="login-container">
+        <! Ability to actually flash the messages to the user when they enter an unidentifiable login sequence>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert" style="text-align: center">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
         <div class="logo">NEW USER SIGN UP</div>
         <form method="POST" action="{{ url_for('register_user') }}">
-            <! Required Information Section>
             <div class="mb-3">
                 <label for="first_name" class="form-label">FIRST NAME</label>
                 <input type="text" class="form-control" id="first_name" name="first_name" required>
@@ -57,18 +69,14 @@
                 <label for="last_name" class="form-label">LAST NAME</label>
                 <input type="text" class="form-control" id="last_name" name="last_name" required>
             </div>
-            <! Required username section>
             <div class="mb-3">
                 <label for="username" class="form-label">USERNAME</label>
                 <input type="text" class="form-control" id="username" name="username" required>
             </div>
-            <! Required password section>
             <div class="mb-3">
                 <label for="password" class="form-label">PASSWORD</label>
                 <input type="password" class="form-control" id="password" name="password" required>
             </div>
-            
-            <! Fun favorite food question to appear on profile>
             <div>
                 <label for="favorite_food" class="form-label">FAVORITE FOOD</label>
                 <input type="text" class="form-control" id="favorite_food" name="favorite_food" required>
@@ -76,11 +84,6 @@
             <div style="text-align:center">
                 Once signed up, re-log in with your new account information!
             </div>
-            <! Submit to sign up button>
-            <input type="hidden" name="username">
-            <input type="hidden" name="password">
-            <input type="hidden" name="first_name">
-            <input type="hidden" name="last_name">
             <button type="submit" class="btn btn-login w-100">SIGN UP</button>
         </form>
     </div>

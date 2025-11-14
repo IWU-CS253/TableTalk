@@ -1,6 +1,6 @@
 import os
 from sqlite3 import dbapi2 as sqlite3
-from flask import Flask, request, g, redirect, url_for, render_template, flash, get_flashed_messages
+from flask import Flask, request, g, redirect, url_for, render_template, flash, get_flashed_messages, session
 
 app = Flask(__name__)
 
@@ -45,7 +45,7 @@ def close_db(error):
 def welcome_page():
     return render_template('login.html')
 
-@app.route('/login', methods=['post'])
+@app.route('/login', methods=['POST'])
 def login():
     if "username" in request.form and "password" in request.form:
         db = get_db()
@@ -70,46 +70,65 @@ def login():
 def sign_up():
     return render_template('new_user_sign_up.html')
 
-@app.route('/register_user', methods=['post'])
+
+
+
+
+
+app.secret_key = 'your_secret_key'  # Required for session and flash
+
+@app.route('/register_user', methods=['POST'])
 def register_user():
-    if "username" and "password" and "first_name" and "last_name" in request.args:
+    if all(request.form.get(field) for field in ["username", "password", "first_name", "last_name", "favorite_food"]):
         db = get_db()
-        cur = db.execute('SELECT id FROM users WHERE username = ?',
-                            [request.form['username']])
+
+        # make easy access stored variable
+        username = request.form.get('username')
+        password = request.form.get('password')
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        favorite_food = request.form.get('favorite_food')
+
+        cur = db.execute('SELECT id FROM users WHERE username = ?', [username])
         user = cur.fetchone()
+
         if user is None:
-            db.execute('INSERT INTO users (username, password, first_name, last_name, favorite_food) VALUES (?, ?, ?, ?,?)',
-                       [request.form['username'], request.form['password'], request.form['first_name'], request.form['last_name'], request.form['favorite_food']])
+            db.execute('INSERT INTO users (username, password, first_name, last_name, favorite_food) VALUES (?, ?, ?, ?, ?)',
+                       [username, password, first_name, last_name, favorite_food])
             db.commit()
+            session['username'] = username  # Store user in session
             flash("New account successfully registered", "info")
-            print_flashes()
             return redirect(url_for('show_feed'))
         else:
             flash("Username is already taken", "warning")
-            print_flashes()
             return render_template('new_user_sign_up.html')
     else:
         flash("Form arguments missing", "error")
-        print_flashes()
         return render_template('new_user_sign_up.html')
 
-@app.route('/show_feed', methods=['post'])
+@app.route('/show_feed', methods=['GET'])
 def show_feed():
-    db = get_db()
-    if "username" in request.args and "password" in request.args:
+    if 'username' in session:
+        db = get_db()
         cur = db.execute('SELECT id, title FROM posts ORDER BY id DESC')
         feed = cur.fetchall()
-        return render_template('main_feed', feed=feed)
+        return render_template('main_feed.html', feed=feed)
     else:
-        flash("Invalid username or password", "error")
-        print_flashes()
+        flash("Please log in to view the feed", "error")
         return render_template('login.html')
 
-@app.route('/cart', methods=['post'])
+
+
+
+
+
+
+
+@app.route('/cart', methods=['POST'])
 def show_cart():
     return render_template('cart.html')
 
-@app.route('/user_profile', methods=['post'])
+@app.route('/user_profile', methods=['POST'])
 def show_profile():
     if "username" in request.args:
         db = get_db()
@@ -127,6 +146,6 @@ def show_profile():
         print_flashes()
         return redirect(url_for('show_feed'))
 
-@app.route('/recipe', methods=['post'])
+@app.route('/recipe', methods=['POST'])
 def show_recipe_card():
     return render_template('recipe_card.html')
