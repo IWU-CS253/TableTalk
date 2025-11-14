@@ -4,6 +4,7 @@ from flask import Flask, request, g, redirect, url_for, render_template, flash, 
 
 app = Flask(__name__)
 
+# look to see if you can store multiple attributes in the session data or just the username
 # need to figure out how to use this
 app.secret_key = 'your_secret_key'  # Required for session and flash
 
@@ -143,3 +144,31 @@ def show_profile():
 @app.route('/recipe', methods=['POST'])
 def show_recipe_card():
     return render_template('recipe_card.html')
+
+
+@app.route('/submit_recipe', methods=['POST'])
+def submit_recipe():
+    if 'username' in session:
+        title = request.form['title']
+        category = request.form['category']
+        content = request.form['content']
+        username = session['username']
+
+        db = get_db()
+        cur = db.execute('SELECT id FROM users WHERE username = ?', [username])
+        user = cur.fetchone()
+
+        if user:
+            user_id = user['id']
+            db.execute('INSERT INTO posts (title, category, content, author, user_id) VALUES (?, ?, ?, ?, ?)',
+                       [title, category, content, username, user_id])
+            db.commit()
+
+            flash("Recipe added successfully!", "info")
+            return redirect(url_for('show_feed'))
+        else:
+            flash("User not found", "error")
+            return redirect(url_for('login'))
+    else:
+        flash("Please log in to submit a recipe", "error")
+        return redirect(url_for('login'))
