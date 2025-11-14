@@ -19,6 +19,8 @@
         <! Main Feed>
         <div class="col-md-9">
             <h5 class="mb-3">Main Feed</h5>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#recipeModal">Add New Recipe</button>
+
 
             {% for post in posts %}
             <div class="card mb-4">
@@ -47,6 +49,55 @@
                 </div>
             </div>
             {% endfor %}
+
+
+
+            <! Recipe modal to add recipies in the feed posts>
+            <div class="modal fade" id="recipeModal" tabindex="-1" aria-labelledby="recipeModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+
+                  <form method="POST" action="{{ url_for('submit_recipe') }}">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="recipeModalLabel">New Recipe Card</h5>
+                    </div>
+
+
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label for="recipeTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="recipeTitle" name="title" required>
+                      </div>
+                      <div class="mb-3">
+                        <label for="recipeCategory" class="form-label">Category</label>
+                        <select class="form-select" id="recipeCategory" name="category" required>
+                          <option selected disabled>Select a category</option>
+                          <option>American</option>
+                          <option>Chinese</option>
+                          <option>Greek</option>
+                          <option>Indian</option>
+                          <option>Italian (Pizza)</option>
+                          <option>Italian (Pasta)</option>
+                          <option>Mexican</option>
+                          <option>Seafood</option>
+                          <option>Other</option>
+                        </select>
+                      </div>
+                      <div class="mb-3">
+                        <label for="recipeContent" class="form-label">Recipe Steps</label>
+                        <textarea class="form-control" id="recipeContent" name="content" rows="4" required></textarea>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="submit" class="btn btn-success">Post Recipe</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+
+
         </div>
     </div>
 </div>
