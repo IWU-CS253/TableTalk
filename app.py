@@ -59,6 +59,7 @@ def login():
         else:
             flash("Username does not exist", "error")
             print_flashes()
+            # this needs to return a flash to users so they know as well not just a flash to the terminal
             return render_template('login.html')
     else:
         flash("Invalid username or password", "error")
