@@ -21,18 +21,36 @@
 
     <main>
         <section class="profile-info">
-        <-- All of this im putting below are placeholders until we find exactly
-        what we want -->
+            <!-- pulling user info dynamically -->
+            <h2>{{ user.username }}</h2>
+            <p>Email: {{ user.email }}</p>
+
+            <img src="{{ user.profile_picture }}" alt=" Profile Picture"/>
+            <!--
         <img src="https://via.placeholder.com/150" alt="Profile picture" class="profile-pic">
         <h2>User Name</h2>
         <p>Email: user@email.com</p>
+            -->
         </section>
 
-        <-- Always subject to change if needed/wanted -->
-        <-- User's recipes section -->
+        <!-- User's recipes section -->
         <section class="user-recipes">
-            <h3>My Recipes</h3>
-            <p>No recipes yet.</p>
+            <h3>{{ user.username }}'s Recipes</h3>
+
+            <!-- For if the User has recipes -->
+            {% if recipes %}
+                <ul>
+                    {% for recipe in recipes %}
+                        <li>
+                            <a href="{{ url_for('recipe_detail', recipe_id=recipe_id) }}">
+                                {{ recipe.title }}
+                            </a>
+                        </li>
+                    {% end for %}
+                </ul>
+            {% else %}
+            <p>No recipes posted yet</p>
+            {% endif %}
         </section>
     </main>
 
