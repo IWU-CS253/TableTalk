@@ -42,8 +42,13 @@
         <div class="card-header">
           <strong>{{ post.username }}</strong> ({{ post.category }})
         </div>
+
         <div class="card-body">
-          <h5 class="card-title text-success fw-bold">{{ post.title }}</h5>
+          <! Div with a button to the right side so the user can click and see the recipe more fully>
+          <div class="d-flex justify-content-between align-items-center">
+              <h5 class="card-title text-success fw-bold mb-0">{{ post.title }}</h5>
+              <a href="{{ url_for('view_recipe', recipe_id=post.id) }}" class="btn btn-outline-success btn-sm">View Recipe</a>
+          </div>
           <div class="mb-2"><strong>Category:</strong> {{ post.category }}</div>
 
           <! Display all the Ingredients>
@@ -64,13 +69,15 @@
 
           <! Enable edit and delete buttons IF AND ONLY IF the user logged in owns that post>
           {% if post.username == session['username'] %}
+
+          <! This keeps the optional edit and delete buttons outside the clickable wrapper section to open recipe_card.html>
           <div class="mt-2">
               <! Delete Button>
             <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" style="display:inline;">
               <button type="submit" class="btn btn-danger btn-sm">Delete</button>
             </form>
 
-              <! Edit Button>
+            <! Edit Button>
             <button type="button"
                     class="btn btn-warning btn-sm"
                     data-bs-toggle="modal"
