@@ -1,8 +1,12 @@
 import os
 from sqlite3 import dbapi2 as sqlite3
-from flask import Flask, request, g, redirect, url_for, render_template, flash
+from flask import Flask, request, g, redirect, url_for, render_template, flash, get_flashed_messages, session
 
 app = Flask(__name__)
+
+# look to see if you can store multiple attributes in the session data or just the username
+# need to figure out how to use this
+app.secret_key = 'your_secret_key'  # Required for session and flash
 
 app.config.update(dict(
     DATABASE=os.path.join(app.root_path, 'tabletalk.db'),
@@ -22,12 +26,9 @@ def init_db():
         db.cursor().executescript(f.read())
     db.commit()
 
-
-def check_username_exists(username):
-    db = get_db()
-    cursor = db.execute('SELECT id FROM accounts WHERE username = ?', (username,))
-    user = cursor.fetchone()
-    return user is not None
+def print_flashes():
+    for message in get_flashed_messages():
+        print(message)
 
 @app.cli.command('initdb')
 def initdb_command():
@@ -48,72 +49,185 @@ def close_db(error):
 def welcome_page():
     return render_template('login.html')
 
-@app.route('/login', methods=['post'])
+@app.route('/login', methods=['POST'])
 def login():
-    if "username" in request.args and "password" in request.args:
+    if "username" in request.form and "password" in request.form:
         db = get_db()
-        cur = db.execute('SELECT id FROM accounts WHERE username = ? AND password = ?',
+        cur = db.execute('SELECT id FROM users WHERE username = ? AND password = ?',
                          [request.form['username'], request.form['password']])
         user = cur.fetchone()
         if user is not None:
-            flash('Successfully logged into account')
+            # update session
+            session['username'] = request.form['username']
+
+            flash("Successfully logged into account", "info")
+            print_flashes()
             return redirect(url_for('show_feed'))
         else:
-            flash('Username does not exist')
+            flash("Username does not exist", "error")
+            print_flashes()
+            # this needs to return a flash to users so they know as well not just a flash to the terminal
             return render_template('login.html')
     else:
-        flash('Invalid username or password')
+        flash("Invalid username or password", "error")
+        print_flashes()
         return render_template('login.html')
 
-@app.route('/sign_up', methods=['post'])
+
+@app.route('/sign_up')
 def sign_up():
-    if "username" in request.args and "password" in request.args:
+    return render_template('new_user_sign_up.html')
+
+
+@app.route('/register_user', methods=['POST'])
+def register_user():
+    if all(request.form.get(field) for field in ["username", "password", "first_name", "last_name", "favorite_food"]):
         db = get_db()
-        cur = db.execute('SELECT id FROM accounts WHERE username = ?',
-                            [request.form['username']])
+
+        # make easy access stored variable
+        username = request.form.get('username')
+        password = request.form.get('password')
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        favorite_food = request.form.get('favorite_food')
+
+        cur = db.execute('SELECT id FROM users WHERE username = ?', [username])
         user = cur.fetchone()
+
         if user is None:
-            db.execute('INSERT INTO accounts (username, password) VALUES (?, ?)',
-                       [request.form['username'], request.form['password']])
+            db.execute('INSERT INTO users (username, password, first_name, last_name, favorite_food) VALUES (?, ?, ?, ?, ?)',
+                       [username, password, first_name, last_name, favorite_food])
             db.commit()
-            flash('New account successfully registered')
+            session['username'] = username  # Store user in session
+            flash("New account successfully registered", "info")
             return redirect(url_for('show_feed'))
         else:
-            flash('Username is already taken')
+            flash("Username is already taken", "warning")
             return render_template('new_user_sign_up.html')
     else:
+        flash("Form arguments missing", "error")
         return render_template('new_user_sign_up.html')
 
-@app.route('/show_feed', methods=['post'])
+@app.route('/show_feed', methods=['GET', 'POST'])
 def show_feed():
-    db = get_db()
-    if "username" in request.args and "password" in request.args:
-        cur = db.execute('SELECT id, title FROM posts ORDER BY id DESC')
+    if 'username' in session:
+        db = get_db()
+        cur = db.execute('SELECT * FROM posts ORDER BY id DESC')
         feed = cur.fetchall()
-        return render_template('main_feed', feed=feed)
+        return render_template('main_feed.html', posts=feed)
     else:
-        flash('Invalid username or password')
+        flash("Please log in to view the feed", "error")
         return render_template('login.html')
 
-@app.route('/cart', methods=['post'])
+@app.route('/cart')
 def show_cart():
     return render_template('cart.html')
 
-@app.route('/user_profile', methods=['post'])
+@app.route('/user_profile', methods=['POST'])
 def show_profile():
-    if "username" in request.args:
+    if "username" in session:
         db = get_db()
-        cur = db.execute('SELECT id FROM accounts WHERE username = ?',
-                         [request.form['username']])
+        cur = db.execute('SELECT id FROM users WHERE username = ?',
+                         [session['username']])
         user = cur.fetchone()
         if user is not None:
             return render_template('user_profile.html', user=user)
         else:
-            flash('User does not exist')
+            flash("User does not exist", "error")
+            print_flashes()
             return redirect(url_for('show_feed'))
     else:
-        flash('Their username is needed load their profile')
+        flash("Their username is needed load their profile", "error")
+        print_flashes()
         return redirect(url_for('show_feed'))
+
+
+@app.route('/submit_recipe', methods=['POST'])
+def submit_recipe():
+    if 'username' in session:
+        title = request.form['title']
+        category = request.form['category']
+        ingredients = request.form['ingredients']
+        steps = request.form['steps']
+        username = session['username']
+
+
+        db = get_db()
+        cur = db.execute('SELECT id FROM users WHERE username = ?', [username])
+        user = cur.fetchone()
+
+        if user:
+            user_id = user['id']
+            db.execute('INSERT INTO posts (title, category, ingredients, steps, username, user_id) VALUES (?, ?, ?, ?, ?, ?)',
+                       [title, category,ingredients, steps, username, user_id])
+            db.commit()
+
+            flash("Recipe added successfully!", "info")
+            return redirect(url_for('show_feed'))
+        else:
+            flash("User not found", "error")
+            return redirect(url_for('login'))
+    else:
+        flash("Please log in to submit a recipe", "error")
+        return redirect(url_for('login'))
+
+@app.route('/add_appliance', methods=['POST'])
+def add_appliance():
+    if 'username' in session:
+        if 'appliance' in request.form:
+            db = get_db()
+            cur = db.execute('SELECT id FROM users WHERE username = ?', [session['username']])
+            id_num = cur.fetchone()
+            db.execute('UPDATE appliances SET ? = TRUE WHERE user_id = ?', [request.form['appliance'], id_num])
+            return redirect(url_for('user_profile'))
+        else:
+            flash("An appliance name is needed to add it to your profile")
+            print_flashes()
+            return redirect(url_for('user_profile'))
+    else:
+        flash("You need to be logged in to add an appliance to your profile")
+        print_flashes()
+        return redirect(url_for('show_feed'))
+
+
+@app.route('/delete_post/<int:post_id>', methods=['GET', 'POST'])
+def delete_post(post_id):
+    if 'username' in session:
+        db = get_db()
+        db.execute('DELETE FROM posts WHERE id = ? AND username = ?', [post_id, session['username']])
+        db.commit()
+        flash("Post deleted successfully", "info")
+    return redirect(url_for('show_feed'))
+
+
+@app.route('/edit_post', methods=['POST'])
+def edit_post():
+    post_id = request.form['id']
+    title = request.form['title']
+    category = request.form['category']
+    ingredients = request.form['ingredients']
+    steps = request.form['steps']
+
+    db = get_db()
+
+    # this has an un-needed (but helpful double-check) conditional to check the user owns the post before actually executing the edit on the post
+    db.execute("""UPDATE posts SET title = ?, category = ?, ingredients = ?, steps = ? WHERE id = ? AND username = ?""",
+               (title, category, ingredients, steps, post_id, session['username']))
+    db.commit()
+    return redirect(url_for('show_feed'))
+
+
+@app.route('/view_recipe/<int:recipe_id>', methods=['GET', 'POST'])
+def view_recipe(recipe_id):
+    db = get_db()
+    recipe = db.execute('SELECT * FROM posts WHERE id = ?',
+                        (recipe_id,)).fetchone()
+
+    # if an error occours and the recipe no longer occours but somehow was still on the feed
+    if recipe is None:
+        flash("Recipe not found", "error")
+        return redirect(url_for('show_feed'))
+
 
 @app.route('/recipe', methods=['post'])
 def show_recipe_card():
@@ -131,3 +245,13 @@ def show_recipe_card():
 
     return render_template('recipe_card.html', recipe = recipe, ingredients = ingredients, comments = comments)
     #return render_template('recipe_card.html')
+
+    # open the recipe_card.html file
+    return render_template('recipe_card.html', recipe=recipe)
+
+
+@app.route('/logout', methods=['GET', 'POST'])
+def logout():
+    session['username'] = None
+    return render_template('login.html')
+
