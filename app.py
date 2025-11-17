@@ -247,7 +247,7 @@ def view_recipe(recipe_id):
         return redirect(url_for('show_feed'))
 
 
-@app.route('/recipe', methods=['post'])
+@app.route('/recipe/<int:recipe_id>', methods=['POST'])
 def show_recipe_card():
     recipe_id = request.form.get("recipe_id")
 
@@ -273,3 +273,12 @@ def logout():
     session['username'] = None
     return render_template('login.html')
 
+app.route('/add_comment/<int:recipe_id>', methods=['POST'])
+def add_comment(recipe_id):
+    comment_text = request.form.get("comment")
+
+    db = get_db()
+    db.execute('INSERT INTO comments (recipe_id, comment_text) VALUES (?,?)', (recipe_id, comment_text))
+    db.commit()
+
+    return redirect(url_for('show_recipe_card', recipe_id = recipe_id))
