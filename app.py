@@ -121,13 +121,25 @@ def show_recipe_card():
 
     db = get_db()
 
-    #This pulls the recipe itself
+    # This pulls the recipe itself
     recipe = db.execute("SELECT * FROM recipes WHERE id = ?", (recipe_id)).fetchone()
 
-    #Pulls the ingredients
+    # Pulls the ingredients
     ingredients = db.execute("SELECT ingredient FROM ingredients WHERE id = ?", (recipe_id)).fetchall()
 
     comments = db.execute("SELECT comment_text FROM comments WHERE id = ?", (recipe_id)).fetchall()
 
-    return render_template('recipe_card.html', recipe = recipe, ingredients = ingredients, comments = comments)
-    #return render_template('recipe_card.html')
+    return render_template('recipe_card.html', recipe=recipe, ingredients=ingredients, comments=comments)
+    # return render_template('recipe_card.html')
+
+@app.route('/add_comment', methods=['POST'])
+def add_comment():
+
+    recipe_id = request.form.get("recipe_id")
+    comment = request.form.get("comment")
+
+    db = get_db()
+    db.execute("INSERT INTO comments (recipe_id, comment_text) VALUES (?, ?)", (recipe_id, comment))
+    db.commit()
+
+    return redirect(url_for('show_recipe_card', recipe_id = recipe_id))

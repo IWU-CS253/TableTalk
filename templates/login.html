@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>TableTalk Login</title>
+    <! adding a bootstrap style sheet although Jillian is not sure if we need this yet.>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <! Add this to its own stylesheet>
@@ -50,7 +51,20 @@
     <! Pre-existing account log in section>
     <div class="login-container">
         <div class="logo">WELCOME TO TABLETALK</div>
-        <form method="POST" action="/login">
+
+        <! Ability to actually flash the messages to the user when they enter an unidentifiable login sequence>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('login') }}">
             <! Required username submission section>
             <div class="mb-3">
                 <label for="username" class="form-label">USERNAME</label>
@@ -66,9 +80,10 @@
     </div>
 
     <! Allow new user sign up>
-    <div>
-        <textarea>Don't have an account?</textarea>
-        <button type="submit" class="btn btn-login w-100">SIGN UP HERE</button>
+    <div style="text-align: center">
+        <! Direct text added to the bottom of the page above the signup for new users button>
+        Don't have an account?
+        <button onclick="window.location.href= '{{ url_for('sign_up') }}'" type="submit" class="btn btn-login w-100">SIGN UP HERE</button>
     </div>
 
     <! Javascript insertion (not sure if needed yet)>
