@@ -119,7 +119,7 @@ def show_feed():
         flash("Please log in to view the feed", "error")
         return render_template('login.html')
 
-@app.route('/cart', methods=['POST'])
+@app.route('/cart')
 def show_cart():
     return render_template('cart.html')
 
