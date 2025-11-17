@@ -141,10 +141,6 @@ def show_profile():
         print_flashes()
         return redirect(url_for('show_feed'))
 
-@app.route('/recipe', methods=['POST'])
-def show_recipe_card():
-    return render_template('recipe_card.html')
-
 
 @app.route('/submit_recipe', methods=['POST'])
 def submit_recipe():
@@ -219,6 +215,22 @@ def edit_post():
                (title, category, ingredients, steps, post_id, session['username']))
     db.commit()
     return redirect(url_for('show_feed'))
+
+
+@app.route('/view_recipe/<int:recipe_id>', methods=['GET', 'POST'])
+def view_recipe(recipe_id):
+    db = get_db()
+    recipe = db.execute('SELECT * FROM posts WHERE id = ?',
+                        (recipe_id,)).fetchone()
+
+    # if an error occours and the recipe no longer occours but somehow was still on the feed
+    if recipe is None:
+        flash("Recipe not found", "error")
+        return redirect(url_for('show_feed'))
+
+    # open the recipe_card.html file
+    return render_template('recipe_card.html', recipe=recipe)
+
 
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
