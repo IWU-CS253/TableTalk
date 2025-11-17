@@ -189,4 +189,9 @@ def add_appliance():
     else:
         flash("You need to be logged in to add an appliance to your profile")
         print_flashes()
-        return redirect(url_for('user_profile'))
+        return redirect(url_for('show_feed'))
+
+@app.route('/logout', methods=['GET', 'POST'])
+def logout():
+    session['username'] = None
+    return render_template('login.html')
