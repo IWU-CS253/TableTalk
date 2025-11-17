@@ -238,16 +238,19 @@ def edit_post():
 @app.route('/view_recipe/<int:recipe_id>', methods=['GET', 'POST'])
 def view_recipe(recipe_id):
     db = get_db()
-    recipe = db.execute('SELECT * FROM posts WHERE id = ?',
-                        (recipe_id,)).fetchone()
+    recipe = db.execute('SELECT * FROM posts WHERE id = ?', (recipe_id,)).fetchone()
 
-    # if an error occours and the recipe no longer occours but somehow was still on the feed
     if recipe is None:
         flash("Recipe not found", "error")
         return redirect(url_for('show_feed'))
 
-    # open the recipe_card.html file
-    return render_template('recipe_card.html', recipe=recipe)
+    ingredients = recipe['ingredients'].split('\n') if recipe['ingredients'] else []
+    instructions = recipe['steps'].split('\n') if recipe['steps'] else []
+    # optional for now must look deeper into
+    comments = []
+
+    return render_template('recipe_card.html', recipe=recipe, ingredients=ingredients, instructions=instructions, comments=comments)
+
 
 @app.route('/user/<username>')
 def show_user_profile(username):
