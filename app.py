@@ -110,14 +110,32 @@ def register_user():
 
 @app.route('/show_feed', methods=['GET', 'POST'])
 def show_feed():
+    # make sure user is logged in
     if 'username' in session:
         db = get_db()
-        cur = db.execute('SELECT * FROM posts ORDER BY id DESC')
-        feed = cur.fetchall()
-        return render_template('main_feed.html', posts=feed)
+        username = session['username']
+
+        # find user id using the session username
+        user_row = db.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone()
+        if not user_row:
+            flash("User not found in database", "error")
+            return redirect(url_for('login'))
+
+        user_id = user_row['id']
+
+        # get all posts for the feed
+        feed = db.execute('SELECT * FROM posts ORDER BY id DESC').fetchall()
+
+        # get all users except the one logged into the current session
+        friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ? ORDER BY id DESC', (user_id,)).fetchall()
+
+        return render_template('main_feed.html', posts=feed, suggested_friends=friends)
+
+    # return user to login if session is empty
     else:
         flash("Please log in to view the feed", "error")
         return render_template('login.html')
+
 
 @app.route('/cart')
 def show_cart():
