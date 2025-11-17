@@ -119,16 +119,16 @@ def show_feed():
         flash("Please log in to view the feed", "error")
         return render_template('login.html')
 
-@app.route('/cart', methods=['POST'])
+@app.route('/cart')
 def show_cart():
     return render_template('cart.html')
 
 @app.route('/user_profile', methods=['POST'])
 def show_profile():
-    if "username" in request.form:
+    if "username" in session:
         db = get_db()
         cur = db.execute('SELECT id FROM users WHERE username = ?',
-                         [request.form['username']])
+                         [session['username']])
         user = cur.fetchone()
         if user is not None:
             return render_template('user_profile.html', user=user)
@@ -175,15 +175,21 @@ def submit_recipe():
         flash("Please log in to submit a recipe", "error")
         return redirect(url_for('login'))
 
-
 @app.route('/add_appliance', methods=['POST'])
 def add_appliance():
-    if "appliance" in request.form and "username" in session:
-        db = get_db()
-        cur = db.execute('SELECT id FROM appliances WHERE user_id = ?', [request.form['']])
-        table = cur.fetchone()
+    if 'username' in session:
+        if 'appliance' in request.form:
+            db = get_db()
+            cur = db.execute('SELECT id FROM users WHERE username = ?', [session['username']])
+            id_num = cur.fetchone()
+            db.execute('UPDATE appliances SET ? = TRUE WHERE user_id = ?', [request.form['appliance'], id_num])
+            return redirect(url_for('user_profile'))
+        else:
+            flash("An appliance name is needed to add it to your profile")
+            print_flashes()
+            return redirect(url_for('user_profile'))
     else:
-        flash("An appliance name is needed to add to your profile")
+        flash("You need to be logged in to add an appliance to your profile")
         print_flashes()
         return redirect(url_for('show_feed'))
 
@@ -197,6 +203,7 @@ def delete_post(post_id):
         flash("Post deleted successfully", "info")
     return redirect(url_for('show_feed'))
 
+
 @app.route('/edit_post', methods=['POST'])
 def edit_post():
     post_id = request.form['id']
@@ -207,7 +214,7 @@ def edit_post():
 
     db = get_db()
 
-    # Optional: verify user owns the post
+    # this has an un-needed (but helpful double-check) conditional to check the user owns the post before actually executing the edit on the post
     db.execute("""UPDATE posts SET title = ?, category = ?, ingredients = ?, steps = ? WHERE id = ? AND username = ?""",
                (title, category, ingredients, steps, post_id, session['username']))
     db.commit()
