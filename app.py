@@ -112,9 +112,9 @@ def register_user():
 def show_feed():
     if 'username' in session:
         db = get_db()
-        cur = db.execute('SELECT id, title FROM posts ORDER BY id DESC')
+        cur = db.execute('SELECT * FROM posts ORDER BY id DESC')
         feed = cur.fetchall()
-        return render_template('main_feed.html', feed=feed)
+        return render_template('main_feed.html', posts=feed)
     else:
         flash("Please log in to view the feed", "error")
         return render_template('login.html')
@@ -151,8 +151,10 @@ def submit_recipe():
     if 'username' in session:
         title = request.form['title']
         category = request.form['category']
-        content = request.form['content']
+        ingredients = request.form['ingredients']
+        steps = request.form['steps']
         username = session['username']
+
 
         db = get_db()
         cur = db.execute('SELECT id FROM users WHERE username = ?', [username])
@@ -160,8 +162,8 @@ def submit_recipe():
 
         if user:
             user_id = user['id']
-            db.execute('INSERT INTO posts (title, category, content, author, user_id) VALUES (?, ?, ?, ?, ?)',
-                       [title, category, content, username, user_id])
+            db.execute('INSERT INTO posts (title, category, ingredients, steps, username, user_id) VALUES (?, ?, ?, ?, ?, ?)',
+                       [title, category,ingredients, steps, username, user_id])
             db.commit()
 
             flash("Recipe added successfully!", "info")
@@ -190,6 +192,33 @@ def add_appliance():
         flash("You need to be logged in to add an appliance to your profile")
         print_flashes()
         return redirect(url_for('show_feed'))
+
+
+@app.route('/delete_post/<int:post_id>', methods=['GET', 'POST'])
+def delete_post(post_id):
+    if 'username' in session:
+        db = get_db()
+        db.execute('DELETE FROM posts WHERE id = ? AND username = ?', [post_id, session['username']])
+        db.commit()
+        flash("Post deleted successfully", "info")
+    return redirect(url_for('show_feed'))
+
+
+@app.route('/edit_post', methods=['POST'])
+def edit_post():
+    post_id = request.form['id']
+    title = request.form['title']
+    category = request.form['category']
+    ingredients = request.form['ingredients']
+    steps = request.form['steps']
+
+    db = get_db()
+
+    # this has an un-needed (but helpful double-check) conditional to check the user owns the post before actually executing the edit on the post
+    db.execute("""UPDATE posts SET title = ?, category = ?, ingredients = ?, steps = ? WHERE id = ? AND username = ?""",
+               (title, category, ingredients, steps, post_id, session['username']))
+    db.commit()
+    return redirect(url_for('show_feed'))
 
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():

@@ -2,103 +2,208 @@
 
 {% block content %}
 <div class="container-fluid mt-4">
-    <div class="row">
-        <! Sidebar for Friends>
-        <div class="col-md-3">
-            <h5 class="mb-3">Suggested Friends</h5>
-            <ul class="list-group">
-                {% for friend in suggested_friends %}
-                <li class="list-group-item d-flex align-items-center">
-                    <i class="bi bi-emoji-smile friend-icon"></i>
-                    {{ friend.name }} ({{ friend.username }})
-                </li>
-                {% endfor %}
-            </ul>
+  <div class="row">
+    <! Sidebar for Friend Cards>
+    <div class="col-md-3">
+      <h5 class="mb-3">Suggested Friends</h5>
+      <ul class="list-group">
+        {% for friend in suggested_friends %}
+        <li class="list-group-item d-flex align-items-center">
+          <i class="bi bi-emoji-smile friend-icon"></i>
+          {{ friend.name }} ({{ friend.username }})
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <! Main Feed Section>
+    <div class="col-md-9">
+      <h5 class="mb-3">Main Feed</h5>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#recipeModal">Add New Recipe</button>
+        <select class="form-select w-auto me-2">
+          <option selected>FILTER POSTS</option>
+          <option>American</option>
+          <option>Chinese</option>
+          <option>Greek</option>
+          <option>Indian</option>
+          <option>Italian (Pizza)</option>
+          <option>Italian (Pasta)</option>
+          <option>Mexican</option>
+          <option>Seafood</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <! Display all the posts in the database>
+      {% for post in posts %}
+      <div class="card mb-4">
+        <div class="card-header">
+          <strong>{{ post.username }}</strong> ({{ post.category }})
         </div>
+        <div class="card-body">
+          <h5 class="card-title text-success fw-bold">{{ post.title }}</h5>
+          <div class="mb-2"><strong>Category:</strong> {{ post.category }}</div>
 
-        <! Main Feed>
-        <div class="col-md-9">
-            <h5 class="mb-3">Main Feed</h5>
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#recipeModal">Add New Recipe</button>
-
-
-            {% for post in posts %}
-            <div class="card mb-4">
-                <div class="card-header">
-                    <strong>{{ post.author }}</strong> ({{ post.category }})
-                </div>
-                <div class="card-body">
-
-
-                    <! I think this is where we will enter the recipe information>
-
-
-                    <! Filter Dropdown>
-                    <select class="form-select w-auto">
-                        <option selected>STYLE...</option>
-                        <option>American</option>
-                        <option>Chinese</option>
-                        <option>Greek</option>
-                        <option>Indian</option>
-                        <option>Italian (Pizza)</option>
-                        <option>Italian (Pasta)</option>
-                        <option>Mexican</option>
-                        <option>Seafood</option>
-                        <option>Other</option>
-                    </select>
-                </div>
-            </div>
+          <! Display all the Ingredients>
+          <p><strong>Ingredients:</strong></p>
+          <ul class="list-group mb-3">
+            {% for ingredient in post.ingredients.split('\n') %}
+            <li class="list-group-item">{{ ingredient }}</li>
             {% endfor %}
+          </ul>
 
+          <! Display all the Steps>
+          <p><strong>Steps:</strong></p>
+          <ol class="list-group list-group-numbered mb-3">
+            {% for step in post.steps.split('\n') %}
+            <li class="list-group-item">{{ step }}</li>
+            {% endfor %}
+          </ol>
 
+          <! Enable edit and delete buttons IF AND ONLY IF the user logged in owns that post>
+          {% if post.username == session['username'] %}
+          <div class="mt-2">
+              <! Delete Button>
+            <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" style="display:inline;">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
 
-            <! Recipe modal to add recipies in the feed posts>
-            <div class="modal fade" id="recipeModal" tabindex="-1" aria-labelledby="recipeModalLabel" aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
+              <! Edit Button>
+            <button type="button"
+                    class="btn btn-warning btn-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#editModal"
+                    data-id="{{ post.id }}"
+                    data-title="{{ post.title }}"
+                    data-category="{{ post.category }}"
+                    data-ingredients="{{ post.ingredients | escape }}"
+                    data-steps="{{ post.steps | escape }}">
+              Edit</button>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
 
-                  <form method="POST" action="{{ url_for('submit_recipe') }}">
-                    <div class="modal-header">
-                      <h5 class="modal-title" id="recipeModalLabel">New Recipe Card</h5>
-                    </div>
+      <! Adding a new recipe to database modal>
+      <div class="modal fade" id="recipeModal" tabindex="-1" aria-labelledby="recipeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form method="POST" action="{{ url_for('submit_recipe') }}">
+              <div class="modal-header">
+                <h5 class="modal-title" id="recipeModalLabel">New Recipe Card</h5>
+              </div>
+              <div class="modal-body">
 
+                  <! Users insert their own recipe titel>
+                <div class="mb-3">
+                  <label for="recipeTitle" class="form-label">Title</label>
+                  <input type="text" class="form-control" id="recipeTitle" name="title" required>
+                </div>
 
-                    <div class="modal-body">
-                      <div class="mb-3">
-                        <label for="recipeTitle" class="form-label">Title</label>
-                        <input type="text" class="form-control" id="recipeTitle" name="title" required>
-                      </div>
-                      <div class="mb-3">
-                        <label for="recipeCategory" class="form-label">Category</label>
-                        <select class="form-select" id="recipeCategory" name="category" required>
-                          <option selected disabled>Select a category</option>
-                          <option>American</option>
-                          <option>Chinese</option>
-                          <option>Greek</option>
-                          <option>Indian</option>
-                          <option>Italian (Pizza)</option>
-                          <option>Italian (Pasta)</option>
-                          <option>Mexican</option>
-                          <option>Seafood</option>
-                          <option>Other</option>
-                        </select>
-                      </div>
-                      <div class="mb-3">
-                        <label for="recipeContent" class="form-label">Recipe Steps</label>
-                        <textarea class="form-control" id="recipeContent" name="content" rows="4" required></textarea>
-                      </div>
-                    </div>
-                    <div class="modal-footer">
-                      <button type="submit" class="btn btn-success">Post Recipe</button>
-                    </div>
-                  </form>
+                  <! Enable labeling to later filter posts by>
+                <div class="mb-3">
+                  <label for="recipeCategory" class="form-label">Category</label>
+                  <select class="form-select" id="recipeCategory" name="category" required>
+                    <option selected disabled>Select a category</option>
+                    <option>American</option>
+                    <option>Chinese</option>
+                    <option>Greek</option>
+                    <option>Indian</option>
+                    <option>Italian (Pizza)</option>
+                    <option>Italian (Pasta)</option>
+                    <option>Mexican</option>
+                    <option>Seafood</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+
+                  <! Insert ingredients>
+                <div class="mb-3">
+                  <label for="recipeIngredients" class="form-label">Ingredients & Measurements</label>
+                  <textarea class="form-control" id="recipeIngredients" name="ingredients" rows="3" required></textarea>
+                </div>
+
+                  <! Insert Steps>
+                <div class="mb-3">
+                  <label for="recipeSteps" class="form-label">Steps</label>
+                  <textarea class="form-control" id="recipeSteps" name="steps" rows="5" required></textarea>
                 </div>
               </div>
-            </div>
 
-
-
+                <! Submit button section>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Post Recipe</button>
+              </div>
+            </form>
+          </div>
         </div>
+      </div>
+
+      <! Ability to edit the modal and have it fully filled when you start editing>
+      <! I (Jillian) had to look up some help from last exercise and on online to fix bugs for this>
+      <! This is essentially the exact same set up as the original insert modal but will be filled with the pre-existing database information>
+      <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form method="POST" action="{{ url_for('edit_post') }}">
+              <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit Recipe</h5>
+              </div>
+              <div class="modal-body">
+                <input type="hidden" name="id" id="edit-id">
+                <div class="mb-3">
+                  <label for="edit-title" class="form-label">Title</label>
+                  <input type="text" class="form-control" id="edit-title" name="title" required>
+                </div>
+                <div class="mb-3">
+                  <label for="edit-category" class="form-label">Category</label>
+                  <select class="form-select" id="edit-category" name="category" required>
+                    <option>American</option>
+                    <option>Chinese</option>
+                    <option>Greek</option>
+                    <option>Indian</option>
+                    <option>Italian (Pizza)</option>
+                    <option>Italian (Pasta)</option>
+                    <option>Mexican</option>
+                    <option>Seafood</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="edit-ingredients" class="form-label">Ingredients & Measurements</label>
+                  <textarea class="form-control" id="edit-ingredients" name="ingredients" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                  <label for="edit-steps" class="form-label">Steps</label>
+                  <textarea class="form-control" id="edit-steps" name="steps" rows="5" required></textarea>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Update Recipe</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
     </div>
+  </div>
 </div>
+
+<! Section to have the edit modal be fully filled in with the pre-existing database information for users if permission is allowed>
+<! I (Jillian) had to look up some help from last exercise and on online to fix bugs for this>
+<script>
+  const editModal = document.getElementById('editModal');
+  editModal.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    document.getElementById('edit-id').value = button.getAttribute('data-id');
+    document.getElementById('edit-title').value = button.getAttribute('data-title');
+    document.getElementById('edit-category').value = button.getAttribute('data-category');
+    document.getElementById('edit-ingredients').value = button.getAttribute('data-ingredients');
+    document.getElementById('edit-steps').value = button.getAttribute('data-steps');});
+</script>
+
 {% endblock %}
