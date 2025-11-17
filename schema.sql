@@ -13,11 +13,11 @@ CREATE TABLE posts
 (
     id      INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    appliance_id INTEGER NOT NULL,
+    appliances_id INTEGER NOT NULL,
     title   TEXT    NOT NULL,
     content TEXT    NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (appliance_id) REFERENCES appliances(id)
+    FOREIGN KEY (appliances_id) REFERENCES appliances(id)
 );
 
 DROP TABLE IF EXISTS appliances;
