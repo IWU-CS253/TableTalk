@@ -249,6 +249,10 @@ def view_recipe(recipe_id):
     # open the recipe_card.html file
     return render_template('recipe_card.html', recipe=recipe)
 
+@app.route('/user/<username>')
+def show_user_profile(username):
+    return render_template('user_profile.html', username=username)
+
 
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():

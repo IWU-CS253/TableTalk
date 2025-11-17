@@ -10,15 +10,21 @@
 
           <! Display all friends which are not the current user logged in>
           {% for friend in suggested_friends %}
-            <li class="list-group-item">
-              <div class="d-flex align-items-left">
-                <strong>{{ friend.first_name }} {{ friend.last_name }}</strong>
-              </div>
-              <div class="ms-4 text-success">@{{ friend.username }}</div>
-              <div class="ms-4"> My favorite food is: {{ friend.favorite_food }}</div>
-            </li>
-          {% endfor %}
+              <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
 
+                  <! Keep working on this>
+                  <a href="{{ url_for('show_user_profile', username=friend.username) }}" class="text-success text-decoration-none">
+                    <strong>{{ friend.first_name }} {{ friend.last_name }}</strong>
+                  </a>
+
+                  <! This does not do anything yet>
+                  <button class="btn btn-outline-success">Add Friend</button>
+                </div>
+                <div class="ms-4" style="text-align: left">@{{ friend.username }}</div>
+                <div class="ms-4"style="text-align: left">My favorite food is: {{ friend.favorite_food }}</div>
+              </li>
+          {% endfor %}
       </ul>
       </ul>
     </div>
