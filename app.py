@@ -49,35 +49,9 @@ def close_db(error):
 def welcome_page():
     return render_template('login.html')
 
-@app.route('/login', methods=['POST'])
-def login():
-    if "username" in request.form and "password" in request.form:
-        db = get_db()
-        cur = db.execute('SELECT id FROM users WHERE username = ? AND password = ?',
-                         [request.form['username'], request.form['password']])
-        user = cur.fetchone()
-        if user is not None:
-            # update session
-            session['username'] = request.form['username']
-
-            flash("Successfully logged into account", "info")
-            print_flashes()
-            return redirect(url_for('show_feed'))
-        else:
-            flash("Username does not exist", "error")
-            print_flashes()
-            # this needs to return a flash to users so they know as well not just a flash to the terminal
-            return render_template('login.html')
-    else:
-        flash("Invalid username or password", "error")
-        print_flashes()
-        return render_template('login.html')
-
-
 @app.route('/sign_up')
 def sign_up():
     return render_template('new_user_sign_up.html')
-
 
 @app.route('/register_user', methods=['POST'])
 def register_user():
@@ -107,6 +81,35 @@ def register_user():
     else:
         flash("Form arguments missing", "error")
         return render_template('new_user_sign_up.html')
+
+@app.route('/login', methods=['POST'])
+def login():
+    if "username" in request.form and "password" in request.form:
+        db = get_db()
+        cur = db.execute('SELECT id FROM users WHERE username = ? AND password = ?',
+                         [request.form['username'], request.form['password']])
+        user = cur.fetchone()
+        if user is not None:
+            # update session
+            session['username'] = request.form['username']
+
+            flash("Successfully logged into account", "info")
+            print_flashes()
+            return redirect(url_for('show_feed'))
+        else:
+            flash("Username does not exist", "error")
+            print_flashes()
+            # this needs to return a flash to users so they know as well not just a flash to the terminal
+            return render_template('login.html')
+    else:
+        flash("Invalid username or password", "error")
+        print_flashes()
+        return render_template('login.html')
+
+@app.route('/logout', methods=['GET', 'POST'])
+def logout():
+    session['username'] = None
+    return render_template('login.html')
 
 @app.route('/show_feed', methods=['GET', 'POST'])
 def show_feed():
@@ -141,6 +144,36 @@ def show_profile():
         print_flashes()
         return redirect(url_for('show_feed'))
 
+@app.route('/add_appliance', methods=['POST'])
+def add_appliance():
+    if 'username' in session:
+        if 'appliance' in request.form:
+            db = get_db()
+            cur = db.execute('SELECT id FROM users WHERE username = ?', [session['username']])
+            id_num = cur.fetchone()
+            db.execute('UPDATE appliances SET ? = TRUE WHERE user_id = ?', [request.form['appliance'], id_num])
+            return redirect(url_for('user_profile'))
+        else:
+            flash("An appliance name is needed to add it to your profile")
+            print_flashes()
+            return redirect(url_for('user_profile'))
+    else:
+        flash("You need to be logged in to add an appliance to your profile")
+        print_flashes()
+        return redirect(url_for('show_feed'))
+
+@app.route('/tag_appliance', methods=['POST'])
+def tag_appliance():
+    if all(request.form.get(field) for field in ["id", 'appliance']):
+        db = get_db()
+        cur = db.execute('SELECT appliances_id FROM posts WHERE id = ?', [session['id']])
+        id_num = cur.fetchone()
+        db.execute('UPDATE appliances SET ? = TRUE WHERE post_id = ?', [request.form['appliance'], id_num])
+        return redirect(url_for('edit_post'))
+    else:
+        flash("An appliance name is needed to tag it on your post")
+        print_flashes()
+        return redirect(url_for('edit_post'))
 
 @app.route('/submit_recipe', methods=['POST'])
 def submit_recipe():
@@ -171,25 +204,6 @@ def submit_recipe():
         flash("Please log in to submit a recipe", "error")
         return redirect(url_for('login'))
 
-@app.route('/add_appliance', methods=['POST'])
-def add_appliance():
-    if 'username' in session:
-        if 'appliance' in request.form:
-            db = get_db()
-            cur = db.execute('SELECT id FROM users WHERE username = ?', [session['username']])
-            id_num = cur.fetchone()
-            db.execute('UPDATE appliances SET ? = TRUE WHERE user_id = ?', [request.form['appliance'], id_num])
-            return redirect(url_for('user_profile'))
-        else:
-            flash("An appliance name is needed to add it to your profile")
-            print_flashes()
-            return redirect(url_for('user_profile'))
-    else:
-        flash("You need to be logged in to add an appliance to your profile")
-        print_flashes()
-        return redirect(url_for('show_feed'))
-
-
 @app.route('/delete_post/<int:post_id>', methods=['GET', 'POST'])
 def delete_post(post_id):
     if 'username' in session:
@@ -198,7 +212,6 @@ def delete_post(post_id):
         db.commit()
         flash("Post deleted successfully", "info")
     return redirect(url_for('show_feed'))
-
 
 @app.route('/edit_post', methods=['POST'])
 def edit_post():
@@ -216,7 +229,6 @@ def edit_post():
     db.commit()
     return redirect(url_for('show_feed'))
 
-
 @app.route('/view_recipe/<int:recipe_id>', methods=['GET', 'POST'])
 def view_recipe(recipe_id):
     db = get_db()
@@ -230,9 +242,3 @@ def view_recipe(recipe_id):
 
     # open the recipe_card.html file
     return render_template('recipe_card.html', recipe=recipe)
-
-
-@app.route('/logout', methods=['GET', 'POST'])
-def logout():
-    session['username'] = None
-    return render_template('login.html')
