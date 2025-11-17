@@ -174,11 +174,18 @@ def submit_recipe():
         return redirect(url_for('login'))
 @app.route('/add_appliance', methods=['POST'])
 def add_appliance():
-    if "appliance" in request.form and "username" in session:
-        db = get_db()
-        cur = db.execute('SELECT id FROM appliances WHERE user_id = ?', [request.form['']])
-        table = cur.fetchone()
+    if 'username' in session:
+        if 'appliance' in request.form:
+            db = get_db()
+            cur = db.execute('SELECT id FROM users WHERE username = ?', [session['username']])
+            id_num = cur.fetchone()
+            db.execute('UPDATE appliances SET ? = TRUE WHERE user_id = ?', [request.form['appliance'], id_num])
+            return redirect(url_for('user_profile'))
+        else:
+            flash("An appliance name is needed to add to your profile")
+            print_flashes()
+            return redirect(url_for('user_profile'))
     else:
-        flash("An appliance name is needed to add to your profile")
+        flash("You need to be logged in to add an appliance to your profile")
         print_flashes()
-        return redirect(url_for('show_feed'))
+        return redirect(url_for('user_profile'))
