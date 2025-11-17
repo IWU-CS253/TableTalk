@@ -128,6 +128,24 @@ def show_cart():
 
 @app.route('/user_profile', methods=['POST'])
 def show_profile():
+    if "username" in request.form:
+        db = get_db()
+        cur = db.execute('SELECT id FROM users WHERE username = ?',
+                         [request.form['username']])
+        user = cur.fetchone()
+        if user is not None:
+            return render_template('user_profile.html', user=user)
+        else:
+            flash("User does not exist", "error")
+            print_flashes()
+            return redirect(url_for('show_feed'))
+    else:
+        flash("Their username is needed load their profile", "error")
+        print_flashes()
+        return redirect(url_for('show_feed'))
+
+@app.route('/my_profile')
+def my_profile():
     if "username" in session:
         db = get_db()
         cur = db.execute('SELECT id FROM users WHERE username = ?',
@@ -140,7 +158,7 @@ def show_profile():
             print_flashes()
             return redirect(url_for('show_feed'))
     else:
-        flash("Their username is needed load their profile", "error")
+        flash("Your username is needed load your profile", "error")
         print_flashes()
         return redirect(url_for('show_feed'))
 
