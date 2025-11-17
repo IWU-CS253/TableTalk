@@ -7,12 +7,19 @@
     <div class="col-md-3">
       <h5 class="mb-3">Suggested Friends</h5>
       <ul class="list-group">
-        {% for friend in suggested_friends %}
-        <li class="list-group-item d-flex align-items-center">
-          <i class="bi bi-emoji-smile friend-icon"></i>
-          {{ friend.name }} ({{ friend.username }})
-        </li>
-        {% endfor %}
+
+          <! Display all friends which are not the current user logged in>
+          {% for friend in suggested_friends %}
+            <li class="list-group-item">
+              <div class="d-flex align-items-left">
+                <strong>{{ friend.first_name }} {{ friend.last_name }}</strong>
+              </div>
+              <div class="ms-4 text-success">@{{ friend.username }}</div>
+              <div class="ms-4"> My favorite food is: {{ friend.favorite_food }}</div>
+            </li>
+          {% endfor %}
+
+      </ul>
       </ul>
     </div>
 
@@ -104,7 +111,7 @@
               </div>
               <div class="modal-body">
 
-                  <! Users insert their own recipe titel>
+                <! Users insert their own recipe titel>
                 <div class="mb-3">
                   <label for="recipeTitle" class="form-label">Title</label>
                   <input type="text" class="form-control" id="recipeTitle" name="title" required>

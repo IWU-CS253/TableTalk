@@ -113,14 +113,32 @@ def logout():
 
 @app.route('/show_feed', methods=['GET', 'POST'])
 def show_feed():
+    # make sure user is logged in
     if 'username' in session:
         db = get_db()
-        cur = db.execute('SELECT * FROM posts ORDER BY id DESC')
-        feed = cur.fetchall()
-        return render_template('main_feed.html', posts=feed)
+        username = session['username']
+
+        # find user id using the session username
+        user_row = db.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone()
+        if not user_row:
+            flash("User not found in database", "error")
+            return redirect(url_for('login'))
+
+        user_id = user_row['id']
+
+        # get all posts for the feed
+        feed = db.execute('SELECT * FROM posts ORDER BY id DESC').fetchall()
+
+        # get all users except the one logged into the current session
+        friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ? ORDER BY id DESC', (user_id,)).fetchall()
+
+        return render_template('main_feed.html', posts=feed, suggested_friends=friends)
+
+    # return user to login if session is empty
     else:
         flash("Please log in to view the feed", "error")
         return render_template('login.html')
+
 
 @app.route('/cart')
 def show_cart():
@@ -258,5 +276,33 @@ def view_recipe(recipe_id):
         flash("Recipe not found", "error")
         return redirect(url_for('show_feed'))
 
+
+@app.route('/recipe/<int:recipe_id>', methods=['POST'])
+def show_recipe_card():
+    recipe_id = request.form.get("recipe_id")
+
+    db = get_db()
+
+    #This pulls the recipe itself
+    recipe = db.execute("SELECT * FROM recipes WHERE id = ?", (recipe_id)).fetchone()
+
+    #Pulls the ingredients
+    ingredients = db.execute("SELECT ingredient FROM ingredients WHERE id = ?", (recipe_id)).fetchall()
+
+    comments = db.execute("SELECT comment_text FROM comments WHERE id = ?", (recipe_id)).fetchall()
+
+    return render_template('recipe_card.html', recipe = recipe, ingredients = ingredients, comments = comments)
+    #return render_template('recipe_card.html')
+
     # open the recipe_card.html file
     return render_template('recipe_card.html', recipe=recipe)
+
+app.route('/add_comment/<int:recipe_id>', methods=['POST'])
+def add_comment(recipe_id):
+    comment_text = request.form.get("comment")
+
+    db = get_db()
+    db.execute('INSERT INTO comments (recipe_id, comment_text) VALUES (?,?)', (recipe_id, comment_text))
+    db.commit()
+
+    return redirect(url_for('show_recipe_card', recipe_id = recipe_id))
