@@ -125,10 +125,10 @@ def show_cart():
 
 @app.route('/user_profile', methods=['POST'])
 def show_profile():
-    if "username" in request.form:
+    if "username" in session:
         db = get_db()
         cur = db.execute('SELECT id FROM users WHERE username = ?',
-                         [request.form['username']])
+                         [session['username']])
         user = cur.fetchone()
         if user is not None:
             return render_template('user_profile.html', user=user)
@@ -172,6 +172,7 @@ def submit_recipe():
     else:
         flash("Please log in to submit a recipe", "error")
         return redirect(url_for('login'))
+
 @app.route('/add_appliance', methods=['POST'])
 def add_appliance():
     if 'username' in session:
@@ -182,7 +183,7 @@ def add_appliance():
             db.execute('UPDATE appliances SET ? = TRUE WHERE user_id = ?', [request.form['appliance'], id_num])
             return redirect(url_for('user_profile'))
         else:
-            flash("An appliance name is needed to add to your profile")
+            flash("An appliance name is needed to add it to your profile")
             print_flashes()
             return redirect(url_for('user_profile'))
     else:
