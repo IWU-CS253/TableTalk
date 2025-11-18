@@ -146,7 +146,7 @@ def filter_posts():
         db = get_db()
         username = session['username']
 
-        selected_category = request.args.get('category')
+        selected_category = request.args.get('filter_category')
         db = get_db()
         categories = db.execute('SELECT DISTINCT category FROM posts').fetchall()
 
@@ -248,10 +248,11 @@ def tag_appliance():
 def submit_recipe():
     if 'username' in session:
         title = request.form['title']
-        category = request.form['category']
+        category = request.form['recipe_category']
         ingredients = request.form['ingredients']
         steps = request.form['steps']
         username = session['username']
+        appliances = request.form.get('appliances', "No Appliances Listed")
 
 
         db = get_db()
@@ -260,8 +261,8 @@ def submit_recipe():
 
         if user:
             user_id = user['id']
-            db.execute('INSERT INTO posts (title, category, ingredients, steps, username, user_id) VALUES (?, ?, ?, ?, ?, ?)',
-                       [title, category,ingredients, steps, username, user_id])
+            db.execute('INSERT INTO posts (title, category, ingredients, steps, username, user_id, appliances) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                       [title, category,ingredients, steps, username, user_id, appliances])
             db.commit()
 
             flash("Recipe added successfully!", "info")
@@ -309,10 +310,11 @@ def view_recipe(recipe_id):
 
     ingredients = recipe['ingredients'].split('\n') if recipe['ingredients'] else []
     instructions = recipe['steps'].split('\n') if recipe['steps'] else []
+    appliances = recipe['appliances'].split('\n') if recipe['steps'] else []
     # optional for now must look deeper into
     comments = []
 
-    return render_template('recipe_card.html', recipe=recipe, ingredients=ingredients, instructions=instructions, comments=comments)
+    return render_template('recipe_card.html', recipe=recipe, ingredients=ingredients, instructions=instructions, appliances=appliances, comments=comments)
 
 
 @app.route('/recipe/<int:recipe_id>', methods=['POST'])

@@ -1,28 +1,13 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <header>
-        <h1>TableTalk</h1>
-        <nav>
-            <a href="index.html">Home</a>
-            <a href="recipes.html">Recipes</a>
-            <a href="profile.html">Profile</a>
-            <a href="logout.html">Logout</a>
-        </nav>
-    </header>
-
     <main>
         <section class="profile-info">
-            <!-- pulling user info dynamically -->
             <h2>{{ user.username }}</h2>
-            <p>Email: {{ user.email }}</p>
+            <p>Favorite Food: {{ user.favorite_food }}</p>
 
-            <img src="{{ user.profile_picture }}" alt=" Profile Picture"/>
-            <!--
-        <img src="https://via.placeholder.com/150" alt="Profile picture" class="profile-pic">
-        <h2>User Name</h2>
-        <p>Email: user@email.com</p>
-            -->
+            <! Commenting out bc not yet enabling profile pictures>
+            <!--<img src="{{ user.profile_picture }}" alt=" Profile Picture"/>-->
         </section>
 
         <!-- User's recipes section -->
@@ -39,23 +24,35 @@
                             </a>
                         </li>
                     {% end for %}
-                </ul>
             {% else %}
+                </ul>
+
+            {% else %}
+            <! Add a prompted button to post their first recipe and take them to the modal pop up>
             <p>No recipes posted yet</p>
             {% endif %}
+
         </section>
 
         {% if user.username == session['username'] %}
-        <div class="mt-2">
+          <div class="mt-2">
+            <! Delete Button>
+            <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" style="display:inline;">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+
             <! Edit Button>
             <button type="button"
                     class="btn btn-warning btn-sm"
                     data-bs-toggle="modal"
                     data-bs-target="#editModal"
-                    data-id="{{ user.id }}"
-                    data-appliances="{{ user. }}"
-            >Edit</button>
-        </div>
+                    data-id="{{ post.id }}"
+                    data-title="{{ post.title }}"
+                    data-category="{{ post.category }}"
+                    data-ingredients="{{ post.ingredients | escape }}"
+                    data-steps="{{ post.steps | escape }}">
+              Edit</button>
+          </div>
         {% endif %}
 
     </main>
