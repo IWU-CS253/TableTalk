@@ -149,3 +149,6 @@ def show_profile():
 @app.route('/recipe', methods=['POST'])
 def show_recipe_card():
     return render_template('recipe_card.html')
+
+if __name__ == "__main__":
+    app.run(debug=True)
