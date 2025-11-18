@@ -25,19 +25,22 @@
             -->
         </section>
 
+
+        
+
         <!-- Appliances Section -->
         <section class="user-appliances">
             <h3>Kitchen Appliances</h3>
+
             
             <!-- For if the User has appliances -->
             {% if appliances %}
                 <ul>
-                    {% for key, value in appliances.items() %}
-                        {if key!}
-                        {% if key != 'id' and key != 'user_id' and value %}
-                            <li>{{ keys }}</li>
-                        {% endif %}
-                    {% endfor %}
+                    {%for key, value in appliances.items() %}
+                        {%if key ! ='id' and key != 'user_id' and value %}
+                            <li>{{key}}</li>
+                        {%endif %}
+                    {%endfor %}
                 </ul>
             {% else %}
                 <p>No appliances added yet.</p>
