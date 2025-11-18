@@ -4,6 +4,10 @@ from flask import Flask, request, g, redirect, url_for, render_template, flash, 
 
 app = Flask(__name__)
 
+# look to see if you can store multiple attributes in the session data or just the username
+# need to figure out how to use this
+app.secret_key = 'your_secret_key'  # Required for session and flash
+
 app.config.update(dict(
     DATABASE=os.path.join(app.root_path, 'tabletalk.db'),
     DEBUG=True,
@@ -45,37 +49,9 @@ def close_db(error):
 def welcome_page():
     return render_template('login.html')
 
-@app.route('/login', methods=['POST'])
-def login():
-    if "username" in request.form and "password" in request.form:
-        db = get_db()
-        cur = db.execute('SELECT id FROM users WHERE username = ? AND password = ?',
-                         [request.form['username'], request.form['password']])
-        user = cur.fetchone()
-        if user is not None:
-            flash("Successfully logged into account", "info")
-            print_flashes()
-            return redirect(url_for('show_feed'))
-        else:
-            flash("Username does not exist", "error")
-            print_flashes()
-            # this needs to return a flash to users so they know as well not just a flash to the terminal
-            return render_template('login.html')
-    else:
-        flash("Invalid username or password", "error")
-        print_flashes()
-        return render_template('login.html')
-
 @app.route('/sign_up')
 def sign_up():
     return render_template('new_user_sign_up.html')
-
-
-
-
-
-
-app.secret_key = 'your_secret_key'  # Required for session and flash
 
 @app.route('/register_user', methods=['POST'])
 def register_user():
@@ -106,31 +82,104 @@ def register_user():
         flash("Form arguments missing", "error")
         return render_template('new_user_sign_up.html')
 
-@app.route('/show_feed', methods=['GET'])
+@app.route('/login', methods=['POST'])
+def login():
+    if "username" in request.form and "password" in request.form:
+        db = get_db()
+        cur = db.execute('SELECT id FROM users WHERE username = ? AND password = ?',
+                         [request.form['username'], request.form['password']])
+        user = cur.fetchone()
+        if user is not None:
+            # update session
+            session['username'] = request.form['username']
+
+            flash("Successfully logged into account", "info")
+            print_flashes()
+            return redirect(url_for('show_feed'))
+        else:
+            flash("Username does not exist", "error")
+            print_flashes()
+            # this needs to return a flash to users so they know as well not just a flash to the terminal
+            return render_template('login.html')
+    else:
+        flash("Invalid username or password", "error")
+        print_flashes()
+        return render_template('login.html')
+
+@app.route('/logout', methods=['GET', 'POST'])
+def logout():
+    session['username'] = None
+    return render_template('login.html')
+
+@app.route('/show_feed', methods=['GET', 'POST'])
 def show_feed():
+    # make sure user is logged in
     if 'username' in session:
         db = get_db()
-        cur = db.execute('SELECT id, title FROM posts ORDER BY id DESC')
-        feed = cur.fetchall()
-        return render_template('main_feed.html', feed=feed)
+        username = session['username']
+
+        # find user id using the session username
+        user_row = db.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone()
+        if not user_row:
+            flash("User not found in database", "error")
+            return redirect(url_for('login'))
+
+        user_id = user_row['id']
+
+        # get all posts for the feed
+        feed = db.execute('SELECT * FROM posts ORDER BY id DESC').fetchall()
+
+        # get all users except the one logged into the current session
+        friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ? ORDER BY id DESC', (user_id,)).fetchall()
+
+        return render_template('main_feed.html', posts=feed, suggested_friends=friends)
+
+    # return user to login if session is empty
     else:
         flash("Please log in to view the feed", "error")
         return render_template('login.html')
 
 
+@app.route('/filter_posts')
+def filter_posts():
+    if 'username' in session:
+        db = get_db()
+        username = session['username']
+
+        selected_category = request.args.get('category')
+        db = get_db()
+        categories = db.execute('SELECT DISTINCT category FROM posts').fetchall()
+
+        # gets all the info to pass in the freinds for the aside
+        user_row = db.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone()
+        user_id = user_row['id']
+        friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ? ORDER BY id DESC', (user_id,)).fetchall()
+
+        # if the user wants to filer posts
+        if selected_category and selected_category != "FILTER POSTS":
+            posts = db.execute('SELECT * FROM posts WHERE category=?',
+                               (selected_category,)).fetchall()
+        # default will be all posts
+        else:
+            posts = db.execute('SELECT * FROM posts').fetchall()
+
+        # return the filtered main feed
+        return render_template('main_feed.html', posts=posts, categories=categories,
+                               selected_category=selected_category, suggested_friends=friends)
+
+    # incase user is not logged in
+    else:
+        flash("Please log in to view the feed", "error")
+        return render_template('login.html')
 
 
-
-
-
-
-@app.route('/cart', methods=['POST'])
+@app.route('/cart')
 def show_cart():
     return render_template('cart.html')
 
 @app.route('/user_profile', methods=['POST'])
 def show_profile():
-    if "username" in request.args:
+    if "username" in request.form:
         db = get_db()
         cur = db.execute('SELECT id FROM users WHERE username = ?',
                          [request.form['username']])
@@ -146,9 +195,157 @@ def show_profile():
         print_flashes()
         return redirect(url_for('show_feed'))
 
-@app.route('/recipe', methods=['POST'])
-def show_recipe_card():
-    return render_template('recipe_card.html')
+@app.route('/my_profile')
+def my_profile():
+    if "username" in session:
+        db = get_db()
+        cur = db.execute('SELECT id FROM users WHERE username = ?',
+                         [session['username']])
+        user = cur.fetchone()
+        if user is not None:
+            return render_template('user_profile.html', user=user)
+        else:
+            flash("User does not exist", "error")
+            print_flashes()
+            return redirect(url_for('show_feed'))
+    else:
+        flash("Your username is needed load your profile", "error")
+        print_flashes()
+        return redirect(url_for('show_feed'))
 
-if __name__ == "__main__":
-    app.run(debug=True)
+@app.route('/add_appliance', methods=['POST'])
+def add_appliance():
+    if 'username' in session:
+        if 'appliance' in request.form:
+            db = get_db()
+            cur = db.execute('SELECT id FROM users WHERE username = ?', [session['username']])
+            id_num = cur.fetchone()
+            db.execute('UPDATE appliances SET ? = TRUE WHERE user_id = ?', [request.form['appliance'], id_num])
+            return redirect(url_for('user_profile'))
+        else:
+            flash("An appliance name is needed to add it to your profile")
+            print_flashes()
+            return redirect(url_for('user_profile'))
+    else:
+        flash("You need to be logged in to add an appliance to your profile")
+        print_flashes()
+        return redirect(url_for('show_feed'))
+
+@app.route('/tag_appliance', methods=['POST'])
+def tag_appliance():
+    if all(request.form.get(field) for field in ["id", 'appliance']):
+        db = get_db()
+        cur = db.execute('SELECT appliances_id FROM posts WHERE id = ?', [session['id']])
+        id_num = cur.fetchone()
+        db.execute('UPDATE appliances SET ? = TRUE WHERE post_id = ?', [request.form['appliance'], id_num])
+        return redirect(url_for('edit_post'))
+    else:
+        flash("An appliance name is needed to tag it on your post")
+        print_flashes()
+        return redirect(url_for('edit_post'))
+
+@app.route('/submit_recipe', methods=['POST'])
+def submit_recipe():
+    if 'username' in session:
+        title = request.form['title']
+        category = request.form['category']
+        ingredients = request.form['ingredients']
+        steps = request.form['steps']
+        username = session['username']
+
+
+        db = get_db()
+        cur = db.execute('SELECT id FROM users WHERE username = ?', [username])
+        user = cur.fetchone()
+
+        if user:
+            user_id = user['id']
+            db.execute('INSERT INTO posts (title, category, ingredients, steps, username, user_id) VALUES (?, ?, ?, ?, ?, ?)',
+                       [title, category,ingredients, steps, username, user_id])
+            db.commit()
+
+            flash("Recipe added successfully!", "info")
+            return redirect(url_for('show_feed'))
+        else:
+            flash("User not found", "error")
+            return redirect(url_for('login'))
+    else:
+        flash("Please log in to submit a recipe", "error")
+        return redirect(url_for('login'))
+
+@app.route('/delete_post/<int:post_id>', methods=['GET', 'POST'])
+def delete_post(post_id):
+    if 'username' in session:
+        db = get_db()
+        db.execute('DELETE FROM posts WHERE id = ? AND username = ?', [post_id, session['username']])
+        db.commit()
+        flash("Post deleted successfully", "info")
+    return redirect(url_for('show_feed'))
+
+@app.route('/edit_post', methods=['POST'])
+def edit_post():
+    post_id = request.form['id']
+    title = request.form['title']
+    category = request.form['category']
+    ingredients = request.form['ingredients']
+    steps = request.form['steps']
+
+    db = get_db()
+
+    # this has an un-needed (but helpful double-check) conditional to check the user owns the post before actually executing the edit on the post
+    db.execute("""UPDATE posts SET title = ?, category = ?, ingredients = ?, steps = ? WHERE id = ? AND username = ?""",
+               (title, category, ingredients, steps, post_id, session['username']))
+    db.commit()
+    return redirect(url_for('show_feed'))
+
+@app.route('/view_recipe/<int:recipe_id>', methods=['GET', 'POST'])
+def view_recipe(recipe_id):
+    db = get_db()
+    recipe = db.execute('SELECT * FROM posts WHERE id = ?', (recipe_id,)).fetchone()
+
+    if recipe is None:
+        flash("Recipe not found", "error")
+        return redirect(url_for('show_feed'))
+
+    ingredients = recipe['ingredients'].split('\n') if recipe['ingredients'] else []
+    instructions = recipe['steps'].split('\n') if recipe['steps'] else []
+    # optional for now must look deeper into
+    comments = []
+
+    return render_template('recipe_card.html', recipe=recipe, ingredients=ingredients, instructions=instructions, comments=comments)
+
+
+@app.route('/recipe/<int:recipe_id>', methods=['POST'])
+def show_recipe_card():
+    recipe_id = request.form.get("recipe_id")
+
+    db = get_db()
+
+    #This pulls the recipe itself
+    recipe = db.execute("SELECT * FROM recipes WHERE id = ?", (recipe_id)).fetchone()
+
+    #Pulls the ingredients
+    ingredients = db.execute("SELECT ingredient FROM ingredients WHERE id = ?", (recipe_id)).fetchall()
+
+    comments = db.execute("SELECT comment_text FROM comments WHERE id = ?", (recipe_id)).fetchall()
+
+    return render_template('recipe_card.html', recipe = recipe, ingredients = ingredients, comments = comments)
+    #return render_template('recipe_card.html')
+
+    # open the recipe_card.html file
+    return render_template('recipe_card.html', recipe=recipe)
+
+
+@app.route('/user/<username>')
+def show_user_profile(username):
+    return render_template('user_profile.html', username=username)
+
+app.route('/add_comment/<int:recipe_id>', methods=['POST'])
+def add_comment(recipe_id):
+    comment_text = request.form.get("comment")
+
+    db = get_db()
+    db.execute('INSERT INTO comments (recipe_id, comment_text) VALUES (?,?)', (recipe_id, comment_text))
+    db.commit()
+
+    return redirect(url_for('show_recipe_card', recipe_id = recipe_id))
