@@ -140,6 +140,39 @@ def show_feed():
         return render_template('login.html')
 
 
+@app.route('/filter_posts')
+def filter_posts():
+    if 'username' in session:
+        db = get_db()
+        username = session['username']
+
+        selected_category = request.args.get('category')
+        db = get_db()
+        categories = db.execute('SELECT DISTINCT category FROM posts').fetchall()
+
+        # gets all the info to pass in the freinds for the aside
+        user_row = db.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone()
+        user_id = user_row['id']
+        friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ? ORDER BY id DESC', (user_id,)).fetchall()
+
+        # if the user wants to filer posts
+        if selected_category and selected_category != "FILTER POSTS":
+            posts = db.execute('SELECT * FROM posts WHERE category=?',
+                               (selected_category,)).fetchall()
+        # default will be all posts
+        else:
+            posts = db.execute('SELECT * FROM posts').fetchall()
+
+        # return the filtered main feed
+        return render_template('main_feed.html', posts=posts, categories=categories,
+                               selected_category=selected_category, suggested_friends=friends)
+
+    # incase user is not logged in
+    else:
+        flash("Please log in to view the feed", "error")
+        return render_template('login.html')
+
+
 @app.route('/cart')
 def show_cart():
     return render_template('cart.html')
@@ -268,13 +301,18 @@ def edit_post():
 @app.route('/view_recipe/<int:recipe_id>', methods=['GET', 'POST'])
 def view_recipe(recipe_id):
     db = get_db()
-    recipe = db.execute('SELECT * FROM posts WHERE id = ?',
-                        (recipe_id,)).fetchone()
+    recipe = db.execute('SELECT * FROM posts WHERE id = ?', (recipe_id,)).fetchone()
 
-    # if an error occours and the recipe no longer occours but somehow was still on the feed
     if recipe is None:
         flash("Recipe not found", "error")
         return redirect(url_for('show_feed'))
+
+    ingredients = recipe['ingredients'].split('\n') if recipe['ingredients'] else []
+    instructions = recipe['steps'].split('\n') if recipe['steps'] else []
+    # optional for now must look deeper into
+    comments = []
+
+    return render_template('recipe_card.html', recipe=recipe, ingredients=ingredients, instructions=instructions, comments=comments)
 
 
 @app.route('/recipe/<int:recipe_id>', methods=['POST'])
@@ -296,6 +334,11 @@ def show_recipe_card():
 
     # open the recipe_card.html file
     return render_template('recipe_card.html', recipe=recipe)
+
+
+@app.route('/user/<username>')
+def show_user_profile(username):
+    return render_template('user_profile.html', username=username)
 
 app.route('/add_comment/<int:recipe_id>', methods=['POST'])
 def add_comment(recipe_id):
