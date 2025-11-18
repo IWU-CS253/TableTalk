@@ -137,6 +137,39 @@ def show_feed():
         return render_template('login.html')
 
 
+@app.route('/filter_posts')
+def filter_posts():
+    if 'username' in session:
+        db = get_db()
+        username = session['username']
+
+        selected_category = request.args.get('category')
+        db = get_db()
+        categories = db.execute('SELECT DISTINCT category FROM posts').fetchall()
+
+        # gets all the info to pass in the freinds for the aside
+        user_row = db.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone()
+        user_id = user_row['id']
+        friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ? ORDER BY id DESC', (user_id,)).fetchall()
+
+        # if the user wants to filer posts
+        if selected_category and selected_category != "FILTER POSTS":
+            posts = db.execute('SELECT * FROM posts WHERE category=?',
+                               (selected_category,)).fetchall()
+        # default will be all posts
+        else:
+            posts = db.execute('SELECT * FROM posts').fetchall()
+
+        # return the filtered main feed
+        return render_template('main_feed.html', posts=posts, categories=categories,
+                               selected_category=selected_category, suggested_friends=friends)
+
+    # incase user is not logged in
+    else:
+        flash("Please log in to view the feed", "error")
+        return render_template('login.html')
+
+
 @app.route('/cart')
 def show_cart():
     return render_template('cart.html')

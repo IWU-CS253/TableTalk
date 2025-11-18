@@ -33,20 +33,21 @@
     <div class="col-md-9">
       <h5 class="mb-3">Main Feed</h5>
       <div class="d-flex justify-content-between align-items-center mb-3">
-
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#recipeModal">Add New Recipe</button>
-        <select class="form-select w-auto me-2">
-          <option selected>FILTER POSTS</option>
-          <option>American</option>
-          <option>Chinese</option>
-          <option>Greek</option>
-          <option>Indian</option>
-          <option>Italian (Pizza)</option>
-          <option>Italian (Pasta)</option>
-          <option>Mexican</option>
-          <option>Seafood</option>
-          <option>Other</option>
-        </select>
+        <form method="get" action="{{ url_for('filter_posts') }}" class="d-flex align-items-center mb-3">
+          <select name="category" class="form-select w-auto me-2" onchange="this.form.submit()">
+            <option value="FILTER POSTS" {% if selected_category == 'FILTER POSTS' or not selected_category %}selected{% endif %}>FILTER POSTS</option>
+            <option value="American" {% if selected_category == 'American' %}selected{% endif %}>American</option>
+            <option value="Chinese" {% if selected_category == 'Chinese' %}selected{% endif %}>Chinese</option>
+            <option value="Greek" {% if selected_category == 'Greek' %}selected{% endif %}>Greek</option>
+            <option value="Indian" {% if selected_category == 'Indian' %}selected{% endif %}>Indian</option>
+            <option value="Italian (Pizza)" {% if selected_category == 'Italian (Pizza)' %}selected{% endif %}>Italian (Pizza)</option>
+            <option value="Italian (Pasta)" {% if selected_category == 'Italian (Pasta)' %}selected{% endif %}>Italian (Pasta)</option>
+            <option value="Mexican" {% if selected_category == 'Mexican' %}selected{% endif %}>Mexican</option>
+            <option value="Seafood" {% if selected_category == 'Seafood' %}selected{% endif %}>Seafood</option>
+            <option value="Other" {% if selected_category == 'Other' %}selected{% endif %}>Other</option>
+          </select>
+        </form>
       </div>
 
       <! Display all the posts in the database>
