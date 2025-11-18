@@ -1,59 +1,63 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width" initial-scale="1.0">
-    <title>Recipe Card | TableTalk</title>
-    <-- again somethings are a placeholder like the stylesheet.css thing -->
-    <link rel="stylesheet" href="stylesheet.css">
-</head>
-<body>
+{% extends "layout.html" %}
+
+{% block content %}
     <header>
         <h1>TableTalk</h1>
         <nav>
-            <a href="index.html">Home</a>
-            <a href="recipes.html">All Recipes</a>
-            <a href="profile.html">Profile</a>
+            <a href="{{ url_for('show_feed') }}">Home</a>
+            <a href="{{ url_for('show_feed') }}">All Recipes</a>
+            <a href="{{ url_for('profile', user_id=recipe.user_id) }}">Profile</a>
         </nav>
     </header>
 
     <main>
         <article class="recipe-detail">
-            <-- Place holders until later -->
-            <h2>Recipe Title</h2>
-            <p>By <a href="profile.html">Author Name</a></p>
-            <-- again just a place holder -->
+            <h2>{{ recipe.title }}</h2>
+            <p>By <strong>{{ recipe.username }}</strong></p>
+
             <img src="https://via.placeholder.com/400x250" alt="Recipe image">
 
-            <-- Ingredients section -->
+            <!-- Ingredients section -->
             <section class="ingredients">
                 <h3>Ingredients</h3>
                 <ul>
-                    <li>Ingredient 1</li>
-                    <li>Ingredient 2</li>
-                    <li>Ingredient 3</li>
+                    {% for ingredient in ingredients %}
+                        <li>{{ ingredient }}</li>
+                    {% endfor %}
                 </ul>
             </section>
 
-            <-- Instructions section -->
+            <!-- Instructions section -->
             <section class="instructions">
                 <h3>Instructions</h3>
                 <ol>
-                    <li>Step one</li>
-                    <li>Step two</li>
-                    <li>Step three</li>
+                    {% for step in instructions %}
+                        <li>{{ step }}</li>
+                    {% endfor %}
                 </ol>
             </section>
 
-            <-- comments section -->
+            <!-- Comments section -->
             <section class="comments">
                 <h3>Comments</h3>
-                <p>No comments yet.</p>
+                {% if comments %}
+                    <ul>
+                        {% for c in comments %}
+                            <li>{{ c }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No comments yet</p>
+                {% endif %}
 
-                <form>
-                    <textarea placeholder="Add a comment...."></textarea>
-                    <button type="submit">Post Comment</button>
+                <!-- Comment form (optional: only enable if route exists) -->
+                {#
+                <form method="POST" action="{{ url_for('add_comment', recipe_id=recipe.id) }}">
+                    <label for="comment">Add a comment</label>
+                    <textarea id="comment" name="comment" placeholder="Add a comment..."></textarea>
+                    <button type="submit">Post Submit</button>
                 </form>
+                #}
             </section>
         </article>
     </main>
@@ -61,5 +65,4 @@
     <footer>
         <p>&copy; 2025 TableTalk</p>
     </footer>
-</body>
-</html>
+{% endblock %}
