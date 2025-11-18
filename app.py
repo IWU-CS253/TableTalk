@@ -203,7 +203,8 @@ def my_profile():
                          [session['username']])
         user = cur.fetchone()
         if user is not None:
-            return render_template('user_profile.html', user=user)
+            appliances = db.execute('SELECT * FROM appliances WHERE user_id = ?', [user['id']]).fetchone()
+            return render_template('user_profile.html', user=user,appliances=appliances)
         else:
             flash("User does not exist", "error")
             print_flashes()
