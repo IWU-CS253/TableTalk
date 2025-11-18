@@ -1,35 +1,48 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <header>
-        <h1>TableTalk</h1>
-        <nav>
-            <a href="{{ url_for('show_feed') }}">Home</a>
-            <a href="{{ url_for('show_feed') }}">All Recipes</a>
-            <a href="{{ url_for('profile', user_id=recipe.user_id) }}">Profile</a>
-        </nav>
-    </header>
-
+<h2 class="mb-4 text-success" style="text-align: left"><strong>{{ recipe.title }}</strong></h2>
+<p>Cooked by <strong>{{ recipe.username }}</strong></p>
     <main>
         <article class="recipe-detail">
-            <h2>{{ recipe.title }}</h2>
-            <p>By <strong>{{ recipe.username }}</strong></p>
+            <! Editing out for right now because we are not enabling recipe images yet>
+            <!--<img src="https://via.placeholder.com/400x250" alt="Recipe image">-->
 
-            <img src="https://via.placeholder.com/400x250" alt="Recipe image">
-
-            <!-- Ingredients section -->
+            <! List all the ingredients>
             <section class="ingredients">
-                <h3>Ingredients</h3>
+                <h3><strong>Ingredients</strong></h3>
                 <ul>
-                    {% for ingredient in ingredients %}
-                        <li>{{ ingredient }}</li>
-                    {% endfor %}
+                    {% if ingredients %}
+                    <ul>
+                        {% for ingredient in ingredients %}
+                            <li>{{ ingredient }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                        No Ingredients Listed
+                    {% endif %}
                 </ul>
             </section>
 
-            <!-- Instructions section -->
+            <! List all needed appliances>
+            <section class="appliances">
+                <h3><strong>Appliances Needed</strong></h3>
+                <ul>
+                    {% if appliances %}
+                    <ul>
+                        {% for appliance in appliances %}
+                            <li>{{ appliance }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                        No Appliances Listed
+                    {% endif %}
+                </ul>
+            </section>
+
+            <! Recipe Instructions>
             <section class="instructions">
-                <h3>Instructions</h3>
+                <h3><strong>Instructions</strong></h3>
                 <ol>
                     {% for step in instructions %}
                         <li>{{ step }}</li>
@@ -37,7 +50,7 @@
                 </ol>
             </section>
 
-            <!-- Comments section -->
+            <! Comments Section >
             <section class="comments">
                 <h3>Comments</h3>
                 {% if comments %}

@@ -34,8 +34,10 @@
       <h5 class="mb-3">Main Feed</h5>
       <div class="d-flex justify-content-between align-items-center mb-3">
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#recipeModal">Add New Recipe</button>
+
+        <! Ability to filter posts to a users liking and the default shows all posts>
         <form method="get" action="{{ url_for('filter_posts') }}" class="d-flex align-items-center mb-3">
-          <select name="category" class="form-select w-auto me-2" onchange="this.form.submit()">
+          <select name="filter_category" class="form-select w-auto me-2" onchange="this.form.submit()">
             <option value="FILTER POSTS" {% if selected_category == 'FILTER POSTS' or not selected_category %}selected{% endif %}>FILTER POSTS</option>
             <option value="American" {% if selected_category == 'American' %}selected{% endif %}>American</option>
             <option value="Chinese" {% if selected_category == 'Chinese' %}selected{% endif %}>Chinese</option>
@@ -64,6 +66,7 @@
               <a href="{{ url_for('view_recipe', recipe_id=post.id) }}" class="btn btn-outline-success btn-sm">View Recipe</a>
           </div>
           <div class="mb-2"><strong>Category:</strong> {{ post.category }}</div>
+          <! Choosing not to display the steps on the main feed page because this allows more posts to be seen at once, and entices users to click into the recipe>
 
           <! Display all the Ingredients>
           <p><strong>Ingredients:</strong></p>
@@ -73,13 +76,13 @@
             {% endfor %}
           </ul>
 
-          <! Display all the Steps>
-          <p><strong>Steps:</strong></p>
-          <ol class="list-group list-group-numbered mb-3">
-            {% for step in post.steps.split('\n') %}
-            <li class="list-group-item">{{ step }}</li>
+          <! Display needed appliances>
+          <p><strong>Appliances Needed:</strong></p>
+          <ul class="list-group mb-3">
+            {% for appliance in post.appliances.split('\n') %}
+            <li class="list-group-item">{{ appliance }}</li>
             {% endfor %}
-          </ol>
+          </ul>
 
           <! Enable edit and delete buttons IF AND ONLY IF the user logged in owns that post>
           {% if post.username == session['username'] %}
@@ -124,10 +127,10 @@
                   <input type="text" class="form-control" id="recipeTitle" name="title" required>
                 </div>
 
-                  <! Enable labeling to later filter posts by>
+                <! Enable labeling to later filter posts by>
                 <div class="mb-3">
                   <label for="recipeCategory" class="form-label">Category</label>
-                  <select class="form-select" id="recipeCategory" name="category" required>
+                  <select class="form-select" id="recipeCategory" name="recipe_category" required>
                     <option selected disabled>Select a category</option>
                     <option>American</option>
                     <option>Chinese</option>
@@ -151,6 +154,13 @@
                 <div class="mb-3">
                   <label for="recipeSteps" class="form-label">Steps</label>
                   <textarea class="form-control" id="recipeSteps" name="steps" rows="5" required></textarea>
+                </div>
+              </div>
+
+                <! Insert Appliances>
+                <div class="mb-3">
+                  <label for="recipeAppliances" class="form-label">Appliances Needed</label>
+                  <textarea class="form-control" id="recipeAppliances" name="appliances" rows="4"></textarea>
                 </div>
               </div>
 
@@ -193,13 +203,20 @@
                     <option>Other</option>
                   </select>
                 </div>
+                  <! Ingredients>
                 <div class="mb-3">
                   <label for="edit-ingredients" class="form-label">Ingredients & Measurements</label>
                   <textarea class="form-control" id="edit-ingredients" name="ingredients" rows="3" required></textarea>
                 </div>
+                  <! Steps>
                 <div class="mb-3">
                   <label for="edit-steps" class="form-label">Steps</label>
                   <textarea class="form-control" id="edit-steps" name="steps" rows="5" required></textarea>
+                </div>
+                  <! Appliances>
+                <div class="mb-3">
+                  <label for="edit-appliances" class="form-label">Steps</label>
+                  <textarea class="form-control" id="edit-appliances" name="appliances" rows="4" required></textarea>
                 </div>
               </div>
               <div class="modal-footer">
