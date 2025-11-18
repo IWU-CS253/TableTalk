@@ -37,7 +37,7 @@
 
         <! Ability to filter posts to a users liking and the default shows all posts>
         <form method="get" action="{{ url_for('filter_posts') }}" class="d-flex align-items-center mb-3">
-          <select name="filter_category" class="form-select w-auto me-2" onchange="this.form.submit()">
+          <select name="filter_category" class="form-select w-auto me-2" data-role="filter">
             <option value="FILTER POSTS" {% if selected_category == 'FILTER POSTS' or not selected_category %}selected{% endif %}>FILTER POSTS</option>
             <option value="American" {% if selected_category == 'American' %}selected{% endif %}>American</option>
             <option value="Chinese" {% if selected_category == 'Chinese' %}selected{% endif %}>Chinese</option>
@@ -130,7 +130,7 @@
                 <! Enable labeling to later filter posts by>
                 <div class="mb-3">
                   <label for="recipeCategory" class="form-label">Category</label>
-                  <select class="form-select" id="recipeCategory" name="recipe_category" required>
+                  <select class="form-select" id="recipeCategory" name="recipe_category" data-role="label" required>
                     <option selected disabled>Select a category</option>
                     <option>American</option>
                     <option>Chinese</option>
@@ -155,7 +155,6 @@
                   <label for="recipeSteps" class="form-label">Steps</label>
                   <textarea class="form-control" id="recipeSteps" name="steps" rows="5" required></textarea>
                 </div>
-              </div>
 
                 <! Insert Appliances>
                 <div class="mb-3">
@@ -242,6 +241,8 @@
     document.getElementById('edit-category').value = button.getAttribute('data-category');
     document.getElementById('edit-ingredients').value = button.getAttribute('data-ingredients');
     document.getElementById('edit-steps').value = button.getAttribute('data-steps');});
+
+    document.querySelectorAll('select[data-role="filter"]').forEach(select => {select.addEventListener('change', () => {select.form.submit();});});
 </script>
 
 {% endblock %}
