@@ -323,10 +323,10 @@ def show_recipe_card():
 
     db = get_db()
 
-    #This pulls the recipe itself
+    #this pulls the recipe itself
     recipe = db.execute("SELECT * FROM recipes WHERE id = ?", (recipe_id)).fetchone()
 
-    #Pulls the ingredients
+    # pulls the ingredients
     ingredients = db.execute("SELECT ingredient FROM ingredients WHERE id = ?", (recipe_id)).fetchall()
 
     comments = db.execute("SELECT comment_text FROM comments WHERE id = ?", (recipe_id)).fetchall()
@@ -336,6 +336,22 @@ def show_recipe_card():
 
     # open the recipe_card.html file
     return render_template('recipe_card.html', recipe=recipe)
+
+@app.route('/add_to_cart/<int:recipe_id>', methods=['POST'])
+def add_to_cart(recipe_id):
+    db=get_db()
+    recipe = db.execute("SELECT * FROM posts WHERE id = ?", (recipe_id,)).fetchone()
+    ingredients = recipe.get('ingredients', [])
+
+    # Store in session or database
+    if 'cart' not in session:
+        session['cart'] = []
+
+    session['cart'].extend(ingredients)
+    session.modified = True
+
+    flash('Ingredients added to your cart!', 'success')
+    return redirect(url_for('cart'))
 
 
 @app.route('/user/<username>')
