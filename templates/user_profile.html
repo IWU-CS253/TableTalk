@@ -44,6 +44,20 @@
             <p>No recipes posted yet</p>
             {% endif %}
         </section>
+
+        {% if user.username == session['username'] %}
+        <div class="mt-2">
+            <! Edit Button>
+            <button type="button"
+                    class="btn btn-warning btn-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#editModal"
+                    data-id="{{ user.id }}"
+                    data-appliances="{{ user. }}"
+            >Edit</button>
+        </div>
+        {% endif %}
+
     </main>
 
     <footer>
