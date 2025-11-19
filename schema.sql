@@ -7,6 +7,7 @@ CREATE TABLE users (
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     favorite_food TEXT NOT NULL,
+    following TEXT,
     FOREIGN KEY (appliances_id) REFERENCES appliances(id)
 );
 
