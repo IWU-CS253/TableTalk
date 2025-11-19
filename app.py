@@ -173,10 +173,6 @@ def filter_posts():
         return render_template('login.html')
 
 
-@app.route('/cart')
-def show_cart():
-    return render_template('cart.html')
-
 @app.route('/user_profile', methods=['POST'])
 def show_profile():
     if "username" in request.form:
@@ -339,19 +335,35 @@ def show_recipe_card():
 
 @app.route('/add_to_cart/<int:recipe_id>', methods=['POST'])
 def add_to_cart(recipe_id):
-    db=get_db()
-    recipe = db.execute("SELECT * FROM posts WHERE id = ?", (recipe_id,)).fetchone()
-    ingredients = recipe.get('ingredients', [])
+    db = get_db()
 
-    # Store in session or database
-    if 'cart' not in session:
-        session['cart'] = []
+    recipe = db.execute("SELECT title, ingredients FROM posts WHERE id = ?",
+                        (recipe_id,)).fetchone()
 
-    session['cart'].extend(ingredients)
-    session.modified = True
+    # make all ingredients into a list to be stored in session cart
+    if recipe:
+        title = recipe['title'] if isinstance(recipe, dict) else recipe[0]
+        ingredients_str = recipe['ingredients'] if isinstance(recipe, dict) else recipe[1]
+        ingredients_list = [item.strip() for item in ingredients_str.split(',')]
 
-    flash('Ingredients added to your cart!', 'success')
-    return redirect(url_for('cart'))
+        # storing in session, if no session cart make an empty one
+        if 'cart' not in session:
+            session['cart'] = []
+
+        # append recipe and ingredients to the session cart data
+        session['cart'].append({'title': title, 'ingredients': ingredients_list})
+        session.modified = True
+
+        flash(f'{title} ingredients added to your cart!', 'success')
+    else:
+        flash('Recipe not found.', 'error')
+
+    return redirect(url_for('show_cart'))
+
+
+@app.route('/show_cart')
+def show_cart():
+    return render_template('cart.html')
 
 
 @app.route('/user/<username>')

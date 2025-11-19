@@ -1,36 +1,31 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<h5 class="mb-4 text-success">My Cart</h5>
 
+<div class="col-md-8">
+    <h2 class="text-success mb-1"><strong>My Cart</strong></h2>
+    <p class="mb-0"><strong>{{ session["username"] }}</strong></p>
+</div>
 <div class="bg-light p-4 rounded shadow-sm">
 
     <! For loop for each recipe the user has saved in their account>
-    {% for section in grocery_sections %}
-    <div class="mb-4">
-        <! names to be edited depending on what other developers used on their database setup>
-        <h6 class="fw-bold">Section {{ loop.index }}:</h6>
-        <ul class="cart-recipes">
+    <h2>Your Cart</h2>
+    {% if session.cart %}
+      <ol>
+        {% for item in session.cart %}
+          <li>
+            <strong>{{ item.title }}</strong>
+            <ul>
+              {% for ingredient in item.ingredients %}
+                <li>{{ ingredient }}</li>
+              {% endfor %}
+            </ul>
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p>Your cart is empty.</p>
+    {% endif %}
 
-            <! For loop to list each item in recipe with checkable box>
-            {% for item in section.items %}
-
-            <li class="cart-recipes-item d-flex align-items-left">
-                <! Had to look up how to do this, but it should allow a checkbox next to each ingredient>
-                <! Using this with a bootstrap setup and assistance>
-               <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="item-{{ loop.index }}-{{ loop.index0 }}" {% if item.checked %}checked{% endif %}>
-                    <label class="form-check-label" for="item-{{ loop.index }}-{{ loop.index0 }}">
-                        {{ item.name }}
-                    </label>
-                </div>
-            </li>
-            
-            {% endfor %}
-
-        </ul>
     </div>
-    {% endfor %}
-
-</div>
-{% endblock %}
+    {% endblock %}
