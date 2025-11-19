@@ -370,7 +370,7 @@ def show_cart():
 def show_user_profile(username):
     return render_template('user_profile.html', username=username)
 
-app.route('/add_comment/<int:recipe_id>', methods=['POST'])
+@app.route('/add_comment/<int:recipe_id>', methods=['POST'])
 def add_comment(recipe_id):
     comment_text = request.form.get("comment")
 
@@ -379,3 +379,14 @@ def add_comment(recipe_id):
     db.commit()
 
     return redirect(url_for('show_recipe_card', recipe_id = recipe_id))
+
+@app.route('/follow_user', methods=['POST'])
+def follow_user():
+    db = get_db()
+    cur = db.execute("SELECT following FROM users WHERE username = ?",
+                          session['username'])
+    old_list = cur.fetchone()
+    new_list = old_list.split('|').append(request.form['username'])
+    new_text = new_list.join('|')
+    db.execute('UPDATE users SET following = new_text WHERE username = ?', session['username'])
+    return redirect(url_for('show_feed'))
