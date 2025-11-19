@@ -333,37 +333,76 @@ def show_recipe_card():
     # open the recipe_card.html file
     return render_template('recipe_card.html', recipe=recipe)
 
+
 @app.route('/add_to_cart/<int:recipe_id>', methods=['POST'])
 def add_to_cart(recipe_id):
     db = get_db()
+    recipe = db.execute("SELECT title, ingredients FROM posts WHERE id = ?", (recipe_id,)).fetchone()
 
-    recipe = db.execute("SELECT title, ingredients FROM posts WHERE id = ?",
-                        (recipe_id,)).fetchone()
-
-    # make all ingredients into a list to be stored in session cart
+    # if the recipe exists
     if recipe:
+        # store title, all ingredients, and list seperated ingredients
         title = recipe['title'] if isinstance(recipe, dict) else recipe[0]
         ingredients_str = recipe['ingredients'] if isinstance(recipe, dict) else recipe[1]
-        ingredients_list = [item.strip() for item in ingredients_str.split(',')]
+        ingredients_list = [item.strip() for item in ingredients_str.splitlines() if item.strip()]
 
-        # storing in session, if no session cart make an empty one
+        # if the user does not currently have a cart, make them an empty one
         if 'cart' not in session:
             session['cart'] = []
 
-        # append recipe and ingredients to the session cart data
-        session['cart'].append({'title': title, 'ingredients': ingredients_list})
-        session.modified = True
+        # if there is nothing in the cart already add a dictionary with the desired information from the recipe within
+        if not any(isinstance(r, dict) and r.get('id') == recipe_id for r in session['cart']):
+            session['cart'].append({'id': recipe_id, 'title': title, 'ingredients': ingredients_list})
+            session.modified = True
+            flash(f'{title} ingredients added to your cart!', 'success')
 
-        flash(f'{title} ingredients added to your cart!', 'success')
+        # ensures the recipe can not be added a million times to the cart, only once
+        else:
+            flash(f'{title} is already in your cart.', 'info')
+
+    # this is a warning if something were to go wrong a simple catch-all
     else:
-        flash('Recipe not found.', 'error')
+        flash('Recipe not found.', 'warning')
 
     return redirect(url_for('show_cart'))
 
 
 @app.route('/show_cart')
 def show_cart():
-    return render_template('cart.html')
+    return render_template('cart.html', cart=session.get("cart", []))
+
+
+@app.route('/remove_recipe/<int:recipe_id>', methods=['POST'])
+def remove_recipe(recipe_id):
+    cart = session.get('cart', [])
+    session['cart'] = [r for r in cart if r.get('id') != recipe_id]
+    session.modified = True
+    flash('Recipe removed from cart.', 'info')
+    return redirect(url_for('show_cart'))
+
+
+@app.route('/mark_item/<int:recipe_id>/<item>', methods=['POST'])
+def mark_item(recipe_id, item):
+    cart = session.get('cart', [])
+
+    for recipe in cart:
+        if recipe.get('id') == recipe_id:
+            # Remove the ingredient if it exists
+            if item in recipe['ingredients']:
+                recipe['ingredients'].remove(item)
+                flash(f"Marked off '{item}' from {recipe['title']}.", 'info')
+            break
+
+    session['cart'] = cart
+    session.modified = True
+    return redirect(url_for('show_cart'))
+
+
+@app.route('/clear_cart')
+def clear_cart():
+    session.pop('cart', None)
+    flash('Cart cleared.', 'info')
+    return redirect(url_for('show_cart'))
 
 
 @app.route('/user/<username>')
