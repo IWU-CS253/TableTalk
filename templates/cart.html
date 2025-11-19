@@ -1,23 +1,47 @@
 {% extends "layout.html" %}
 
 {% block content %}
-
 <div class="col-md-8">
     <h2 class="text-success mb-1"><strong>My Cart</strong></h2>
     <p class="mb-0"><strong>{{ session["username"] }}</strong></p>
 </div>
-<div class="bg-light p-4 rounded shadow-sm">
 
-    <! For loop for each recipe the user has saved in their account>
-    <h2>Your Cart</h2>
+<! Section to flash bootstrap alerts>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show mt-3" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+
+
+<div class="bg-light p-4 rounded shadow-sm mt-3">
+    <h4>Your Cart</h4>
+
     {% if session.cart %}
-      <ol>
+      <ol class="list-group list-group-numbered">
         {% for item in session.cart %}
-          <li>
-            <strong>{{ item.title }}</strong>
-            <ul>
-              {% for ingredient in item.ingredients %}
-                <li>{{ ingredient }}</li>
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <strong>{{ item['title'] }}</strong>
+              <form method="POST" action="{{ url_for('remove_recipe', recipe_id=item['id']) }}">
+                <button class="btn btn-sm btn-danger">Remove Recipe</button>
+              </form>
+            </div>
+
+            <ul class="list-group">
+              {% for ingredient in item['ingredients'] %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>{{ ingredient }}</span>
+                  <form method="POST" action="{{ url_for('mark_item', recipe_id=item['id'], item=ingredient) }}">
+                    <button class="btn btn-sm btn-outline-success">✔</button>
+                  </form>
+                </li>
               {% endfor %}
             </ul>
           </li>
@@ -26,6 +50,5 @@
     {% else %}
       <p>Your cart is empty.</p>
     {% endif %}
-
-    </div>
-    {% endblock %}
+</div>
+{% endblock %}
