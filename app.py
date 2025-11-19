@@ -382,11 +382,16 @@ def add_comment(recipe_id):
 
 @app.route('/follow_user', methods=['POST'])
 def follow_user():
-    db = get_db()
-    cur = db.execute("SELECT following FROM users WHERE username = ?",
-                          session['username'])
-    old_list = cur.fetchone()
-    new_list = old_list.split('|').append(request.form['username'])
-    new_text = new_list.join('|')
-    db.execute('UPDATE users SET following = new_text WHERE username = ?', session['username'])
-    return redirect(url_for('show_feed'))
+    if 'username' in session and 'username' in request.form:
+        db = get_db()
+        cur = db.execute("SELECT following FROM users WHERE username = ?",
+                              session['username'])
+        old_list = cur.fetchone()
+        new_list = old_list.split('|').append(request.form['username'])
+        new_text = new_list.join('|')
+        db.execute('UPDATE users SET following = new_text WHERE username = ?', session['username'])
+        return redirect(url_for('show_feed'))
+    else:
+        flash("Failed to follow user")
+        print_flashes()
+        return redirect(url_for('show_feed'))
