@@ -103,7 +103,8 @@
                     data-title="{{ post.title }}"
                     data-category="{{ post.category }}"
                     data-ingredients="{{ post.ingredients | escape }}"
-                    data-steps="{{ post.steps | escape }}">
+                    data-steps="{{ post.steps | escape }}"
+                    data-appliances="{{ post.appliances | escape }}">
               Edit</button>
           </div>
           {% endif %}
@@ -212,9 +213,9 @@
                   <label for="edit-steps" class="form-label">Steps</label>
                   <textarea class="form-control" id="edit-steps" name="steps" rows="5" required></textarea>
                 </div>
-                  <! Appliances>
+                <! Appliances>
                 <div class="mb-3">
-                  <label for="edit-appliances" class="form-label">Steps</label>
+                  <label for="edit-appliances" class="form-label">Appliances</label>
                   <textarea class="form-control" id="edit-appliances" name="appliances" rows="4" required></textarea>
                 </div>
               </div>
@@ -240,7 +241,8 @@
     document.getElementById('edit-title').value = button.getAttribute('data-title');
     document.getElementById('edit-category').value = button.getAttribute('data-category');
     document.getElementById('edit-ingredients').value = button.getAttribute('data-ingredients');
-    document.getElementById('edit-steps').value = button.getAttribute('data-steps');});
+    document.getElementById('edit-steps').value = button.getAttribute('data-steps');
+    document.getElementById('edit-appliances').value = button.getAttribute('data-appliances');});
 
     document.querySelectorAll('select[data-role="filter"]').forEach(select => {select.addEventListener('change', () => {select.form.submit();});});
 </script>

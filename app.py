@@ -298,7 +298,8 @@ def edit_post():
 @app.route('/view_recipe/<int:recipe_id>', methods=['GET', 'POST'])
 def view_recipe(recipe_id):
     db = get_db()
-    recipe = db.execute('SELECT * FROM posts WHERE id = ?', (recipe_id,)).fetchone()
+    recipe = db.execute('SELECT * FROM posts WHERE id = ?',
+                        (recipe_id,)).fetchone()
 
     if recipe is None:
         flash("Recipe not found", "error")
@@ -313,35 +314,16 @@ def view_recipe(recipe_id):
     return render_template('recipe_card.html', recipe=recipe, ingredients=ingredients, instructions=instructions, appliances=appliances, comments=comments)
 
 
-@app.route('/recipe/<int:recipe_id>', methods=['POST'])
-def show_recipe_card():
-    recipe_id = request.form.get("recipe_id")
-
-    db = get_db()
-
-    #this pulls the recipe itself
-    recipe = db.execute("SELECT * FROM recipes WHERE id = ?", (recipe_id)).fetchone()
-
-    # pulls the ingredients
-    ingredients = db.execute("SELECT ingredient FROM ingredients WHERE id = ?", (recipe_id)).fetchall()
-
-    comments = db.execute("SELECT comment_text FROM comments WHERE id = ?", (recipe_id)).fetchall()
-
-    return render_template('recipe_card.html', recipe = recipe, ingredients = ingredients, comments = comments)
-    #return render_template('recipe_card.html')
-
-    # open the recipe_card.html file
-    return render_template('recipe_card.html', recipe=recipe)
-
 
 @app.route('/add_to_cart/<int:recipe_id>', methods=['POST'])
 def add_to_cart(recipe_id):
     db = get_db()
-    recipe = db.execute("SELECT title, ingredients FROM posts WHERE id = ?", (recipe_id,)).fetchone()
+    recipe = db.execute("SELECT title, ingredients FROM posts WHERE id = ?",
+                        (recipe_id,)).fetchone()
 
     # if the recipe exists
     if recipe:
-        # store title, all ingredients, and list seperated ingredients
+        # store title, all ingredients, and list seperated ingredients slipt by the return from the input
         title = recipe['title'] if isinstance(recipe, dict) else recipe[0]
         ingredients_str = recipe['ingredients'] if isinstance(recipe, dict) else recipe[1]
         ingredients_list = [item.strip() for item in ingredients_str.splitlines() if item.strip()]
@@ -360,7 +342,7 @@ def add_to_cart(recipe_id):
         else:
             flash(f'{title} is already in your cart.', 'info')
 
-    # this is a warning if something were to go wrong a simple catch-all
+    # this is a warning if something were to go wrong- a simple catch-all
     else:
         flash('Recipe not found.', 'warning')
 
