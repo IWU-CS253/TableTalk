@@ -1,119 +1,69 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="row align-items-center mb-4">
-  <! recipe title and chef on the left>
-  <div class="col-md-8">
-    <h2 class="text-success mb-1"><strong>{{ recipe.title }}</strong></h2>
-    <p class="mb-0">Cooked by <strong>{{ recipe.username }}</strong></p>
-  </div>
+    <header>
+        <h1>TableTalk</h1>
+        <nav>
+            <a href="{{ url_for('show_feed') }}">Home</a>
+            <a href="{{ url_for('show_feed') }}">All Recipes</a>
+            <a href="{{ url_for('profile', user_id=recipe.user_id) }}">Profile</a>
+        </nav>
+    </header>
 
-  <! cook it button on the right>
-  <div class="col-md-4 text-end">
-    <form method="POST" action="{{ url_for('add_to_cart', recipe_id=recipe.id) }}">
-      <button type="submit" class="btn btn-danger btn-xxl" style="font-size: 1.5rem;">Cook It!</button>
-    </form>
-  </div>
-</div>
+    <main>
+        <article class="recipe-detail">
+            <h2>{{ recipe.title }}</h2>
+            <p>By <strong>{{ recipe.username }}</strong></p>
 
-<main>
-  <article class="recipe-detail">
+            <img src="https://via.placeholder.com/400x250" alt="Recipe image">
 
-    <! Create a row so the ingredients and appliances can be side by side>
-    <div class="row">
-      <! ingredients section>
-      <div class="col-md-6 mb-4">
-        <div class="card h-100">
-          <div class="card-body">
+            <!-- Ingredients section -->
             <section class="ingredients">
-              <h3 class="card-title"><strong>Ingredients</strong></h3>
-              {% if ingredients %}
+                <h3>Ingredients</h3>
                 <ul>
-                  {% for ingredient in ingredients %}
-                    <li>{{ ingredient }}</li>
-                  {% endfor %}
+                    {% for ingredient in ingredients %}
+                        <li>{{ ingredient }}</li>
+                    {% endfor %}
                 </ul>
-              {% else %}
-                <p>No Ingredients Listed</p>
-              {% endif %}
             </section>
-          </div>
-        </div>
-      </div>
 
-      <! appliances section>
-      <div class="col-md-6 mb-4">
-        <div class="card h-100">
-          <div class="card-body">
-            <section class="appliances">
-              <h3 class="card-title"><strong>Appliances Needed</strong></h3>
-              {% if appliances %}
-                <ul>
-                  {% for appliance in appliances %}
-                    <li>{{ appliance }}</li>
-                  {% endfor %}
-                </ul>
-              {% else %}
-                <p>No Appliances Listed</p>
-              {% endif %}
-            </section>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <! back to full width for instruction steps and comments to be implemented>
-    <div class="row">
-      <div class="col-12 mb-4">
-        <div class="card">
-          <div class="card-body">
+            <!-- Instructions section -->
             <section class="instructions">
-              <h3 class="card-title"><strong>Instructions</strong></h3>
-              <ol>
-                {% for step in instructions %}
-                  <li>{{ step }}</li>
-                {% endfor %}
-              </ol>
+                <h3>Instructions</h3>
+                <ol>
+                    {% for step in instructions %}
+                        <li>{{ step }}</li>
+                    {% endfor %}
+                </ol>
             </section>
-          </div>
-        </div>
-      </div>
-    </div>
+            
 
-    <! comments section>
-    <div class="row">
-      <div class="col-12 mb-4">
-        <div class="card">
-          <div class="card-body">
+            <!-- Comments section -->
             <section class="comments">
-              <h3 class="card-title">Comments</h3>
-              {% if comments %}
-                <ul>
-                  {% for c in comments %}
-                    <li>{{ c }}</li>
-                  {% endfor %}
-                </ul>
-              {% else %}
-                <p>No comments yet</p>
-              {% endif %}
+                <h3>Comments</h3>
+                {% if comments %}
+                    <ul>
+                        {% for c in comments %}
+                            <li>{{ c }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No comments yet</p>
+                {% endif %}
 
-              {#
-              <form method="POST" action="{{ url_for('add_comment', recipe_id=recipe.id) }}">
-                <label for="comment">Add a comment</label>
-                <textarea id="comment" name="comment" placeholder="Add a comment..."></textarea>
-                <button type="submit">Post Submit</button>
-              </form>
-              #}
+                <!-- Comment form (optional: only enable if route exists) -->
+                {#
+                <form method="POST" action="{{ url_for('add_comment', recipe_id=recipe.id) }}">
+                    <label for="comment">Add a comment</label>
+                    <textarea id="comment" name="comment" placeholder="Add a comment..."></textarea>
+                    <button type="submit">Post Submit</button>
+                </form>
+                #}
             </section>
-          </div>
-        </div>
-      </div>
-    </div>
+        </article>
+    </main>
 
-  </article>
-</main>
-
-<footer>
-  <p>&copy; 2025 TableTalk</p>
-</footer>
+    <footer>
+        <p>&copy; 2025 TableTalk</p>
+    </footer>
 {% endblock %}
