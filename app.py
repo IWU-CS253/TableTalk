@@ -195,12 +195,13 @@ def show_profile():
 def my_profile():
     if "username" in session:
         db = get_db()
-        cur = db.execute('SELECT id FROM users WHERE username = ?',
+        cur = db.execute('SELECT * FROM users WHERE username = ?',
                          [session['username']])
         user = cur.fetchone()
         if user is not None:
             appliances = db.execute('SELECT * FROM appliances WHERE user_id = ?', [user['id']]).fetchone()
-            return render_template('user_profile.html', user=user,appliances=appliances)
+            recipes = db.execute('SELECT * FROM posts WHERE user_id = ? ORDER BY id DESC', [user['id']]).fetchall()
+            return render_template('user_profile.html', user=user,appliances=appliances,recipes=recipes)
         else:
             flash("User does not exist", "error")
             print_flashes()
@@ -210,23 +211,45 @@ def my_profile():
         print_flashes()
         return redirect(url_for('show_feed'))
 
+
 @app.route('/add_appliance', methods=['POST'])
 def add_appliance():
-    if 'username' in session:
-        if 'appliance' in request.form:
-            db = get_db()
-            cur = db.execute('SELECT id FROM users WHERE username = ?', [session['username']])
-            id_num = cur.fetchone()
-            db.execute('UPDATE appliances SET ? = TRUE WHERE user_id = ?', [request.form['appliance'], id_num])
-            return redirect(url_for('user_profile'))
-        else:
-            flash("An appliance name is needed to add it to your profile")
-            print_flashes()
-            return redirect(url_for('user_profile'))
-    else:
-        flash("You need to be logged in to add an appliance to your profile")
-        print_flashes()
+    if 'username' not in session:
+        flash("Login required")
         return redirect(url_for('show_feed'))
+    
+    db = get_db()
+    cur = db.execute('SELECT id FROM users WHERE username = ?', [session['username']])
+    user_id = cur.fetchone()['id']
+    
+    # Check if row exists
+    existing = db.execute('SELECT * FROM appliances WHERE user_id = ?', [user_id]).fetchone()
+    
+    # Get checkbox values - if checked it's "1", if not checked it's None
+    stove = 1 if request.form.get('stove') else 0
+    oven = 1 if request.form.get('oven') else 0
+    microwave = 1 if request.form.get('microwave') else 0
+    blender = 1 if request.form.get('blender') else 0
+    toaster = 1 if request.form.get('toaster') else 0
+    air_fryer = 1 if request.form.get('air_fryer') else 0
+    slow_cooker = 1 if request.form.get('slow_cooker') else 0
+    pressure_cooker = 1 if request.form.get('pressure_cooker') else 0
+    grill = 1 if request.form.get('grill') else 0
+    
+    if existing:
+        db.execute('''UPDATE appliances SET stove=?, oven=?, microwave=?, blender=?, 
+                      toaster=?, air_fryer=?, slow_cooker=?, pressure_cooker=?, grill=? 
+                      WHERE user_id=?''',
+                   [stove, oven, microwave, blender, toaster, air_fryer, slow_cooker, pressure_cooker, grill, user_id])
+    else:
+        db.execute('''INSERT INTO appliances (user_id, stove, oven, microwave, blender, 
+                      toaster, air_fryer, slow_cooker, pressure_cooker, grill) 
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                   [user_id, stove, oven, microwave, blender, toaster, air_fryer, slow_cooker, pressure_cooker, grill])
+    
+    db.commit()
+    flash("Appliances updated!")
+    return redirect(url_for('my_profile'))
 
 @app.route('/tag_appliance', methods=['POST'])
 def tag_appliance():
@@ -240,6 +263,59 @@ def tag_appliance():
         flash("An appliance name is needed to tag it on your post")
         print_flashes()
         return redirect(url_for('edit_post'))
+    
+
+@app.route('/filter_by_appliances')
+def filter_by_appliances():
+    if 'username' not in session:
+        return redirect(url_for('welcome_page'))
+    
+    db = get_db()
+    user_row = db.execute('SELECT id FROM users WHERE username = ?', [session['username']]).fetchone()
+    user_id = user_row['id']
+    
+    user_app = db.execute('SELECT * FROM appliances WHERE user_id = ?', [user_id]).fetchone()
+    
+    if not user_app:
+        flash("Add your appliances first!")
+        return redirect(url_for('my_profile'))
+    
+    all_posts = db.execute('SELECT * FROM posts ORDER BY id DESC').fetchall()
+    filtered = []
+    
+    for post in all_posts:
+        post_app = db.execute('SELECT * FROM appliances WHERE post_id = ?', [post['id']]).fetchone()
+        
+        if not post_app:
+            filtered.append(post)
+            continue
+        
+        can_make = True
+        if post_app['stove'] and not user_app['stove']:
+            can_make = False
+        if post_app['oven'] and not user_app['oven']:
+            can_make = False
+        if post_app['microwave'] and not user_app['microwave']:
+            can_make = False
+        if post_app['blender'] and not user_app['blender']:
+            can_make = False
+        if post_app['toaster'] and not user_app['toaster']:
+            can_make = False
+        if post_app['air_fryer'] and not user_app['air_fryer']:
+            can_make = False
+        if post_app['slow_cooker'] and not user_app['slow_cooker']:
+            can_make = False
+        if post_app['pressure_cooker'] and not user_app['pressure_cooker']:
+            can_make = False
+        if post_app['grill'] and not user_app['grill']:
+            can_make = False
+        
+        if can_make:
+            filtered.append(post)
+    
+    friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ?', [user_id]).fetchall()
+    return render_template('main_feed.html', posts=filtered, suggested_friends=friends, filtered_by_appliances=True)
+
 
 @app.route('/submit_recipe', methods=['POST'])
 def submit_recipe():
@@ -408,7 +484,20 @@ def clear_cart():
 
 @app.route('/user/<username>')
 def show_user_profile(username):
-    return render_template('user_profile.html', username=username)
+    if 'username' not in session:
+        return redirect(url_for('welcome_page'))
+    
+    db = get_db()
+    cur = db.execute('SELECT * FROM users WHERE username = ?', [username])
+    user = cur.fetchone()
+    
+    if user is not None:
+        appliances = db.execute('SELECT * FROM appliances WHERE user_id = ?', [user['id']]).fetchone()
+        recipes = db.execute('SELECT * FROM posts WHERE user_id = ? ORDER BY id DESC', [user['id']]).fetchall()
+        return render_template('user_profile.html', user=user, appliances=appliances, recipes=recipes)
+    else:
+        flash("User does not exist", "error")
+        return redirect(url_for('show_feed'))
 
 @app.route('/add_comment/<int:recipe_id>', methods=['POST'])
 def add_comment(recipe_id):
@@ -435,3 +524,7 @@ def follow_user():
         flash("Failed to follow user")
         print_flashes()
         return redirect(url_for('show_feed'))
+    
+
+if __name__ == '__main__':
+        app.run(debug=True)
