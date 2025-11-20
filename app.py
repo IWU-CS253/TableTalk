@@ -223,20 +223,46 @@ def add_appliance():
     user_id = cur.fetchone()['id']
     
     # Check if row exists
-    existing = db.execute('SELECT * FROM appliances WHERE user_id = ?', [user_id]).fetchone()
+    appliance = db.execute('SELECT * FROM appliances WHERE user_id = ?', [user_id]).fetchone()
     
-    # Get checkbox values - if checked it's "1", if not checked it's None
-    stove = 1 if request.form.get('stove') else 0
-    oven = 1 if request.form.get('oven') else 0
-    microwave = 1 if request.form.get('microwave') else 0
-    blender = 1 if request.form.get('blender') else 0
-    toaster = 1 if request.form.get('toaster') else 0
-    air_fryer = 1 if request.form.get('air_fryer') else 0
-    slow_cooker = 1 if request.form.get('slow_cooker') else 0
-    pressure_cooker = 1 if request.form.get('pressure_cooker') else 0
-    grill = 1 if request.form.get('grill') else 0
+
+    stove = 0
+    if request.form.get('stove'):
+        stove = 1
+
+    oven = 0
+    if request.form.get('oven'):
+        oven = 1
+
+    microwave = 0
+    if request.form.get('microwave'):
+        microwave = 1
+
+    blender = 0
+    if request.form.get('blender'):
+        blender = 1
+
+    toaster = 0
+    if request.form.get('toaster'):
+        toaster = 1
+
+    air_fryer = 0
+    if request.form.get('air_fryer'):
+        air_fryer = 1
+
+    slow_cooker = 0
+    if request.form.get('slow_cooker'):
+        slow_cooker = 1
+
+    pressure_cooker = 0
+    if request.form.get('pressure_cooker'):
+        pressure_cooker = 1
+
+    grill = 0
+    if request.form.get('grill'):
+        grill = 1
     
-    if existing:
+    if appliance:
         db.execute('''UPDATE appliances SET stove=?, oven=?, microwave=?, blender=?, 
                       toaster=?, air_fryer=?, slow_cooker=?, pressure_cooker=?, grill=? 
                       WHERE user_id=?''',
