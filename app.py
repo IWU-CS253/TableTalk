@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 # look to see if you can store multiple attributes in the session data or just the username
 # need to figure out how to use this
-app.secret_key = 'your_secret_key'  # Required for session and flash
+app.secret_key = 'table_talk_secret_key'
 
 app.config.update(dict(
     DATABASE=os.path.join(app.root_path, 'tabletalk.db'),
