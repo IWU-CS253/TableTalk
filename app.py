@@ -146,7 +146,7 @@ def filter_posts():
         db = get_db()
         username = session['username']
 
-        selected_category = request.args.get('category')
+        selected_category = request.args.get('filter_category')
         db = get_db()
         categories = db.execute('SELECT DISTINCT category FROM posts').fetchall()
 
@@ -172,10 +172,6 @@ def filter_posts():
         flash("Please log in to view the feed", "error")
         return render_template('login.html')
 
-
-@app.route('/cart')
-def show_cart():
-    return render_template('cart.html')
 
 @app.route('/user_profile', methods=['POST'])
 def show_profile():
@@ -249,10 +245,11 @@ def tag_appliance():
 def submit_recipe():
     if 'username' in session:
         title = request.form['title']
-        category = request.form['category']
+        category = request.form['recipe_category']
         ingredients = request.form['ingredients']
         steps = request.form['steps']
         username = session['username']
+        appliances = request.form.get('appliances', "No Appliances Listed")
 
 
         db = get_db()
@@ -261,8 +258,8 @@ def submit_recipe():
 
         if user:
             user_id = user['id']
-            db.execute('INSERT INTO posts (title, category, ingredients, steps, username, user_id) VALUES (?, ?, ?, ?, ?, ?)',
-                       [title, category,ingredients, steps, username, user_id])
+            db.execute('INSERT INTO posts (title, category, ingredients, steps, username, user_id, appliances) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                       [title, category,ingredients, steps, username, user_id, appliances])
             db.commit()
 
             flash("Recipe added successfully!", "info")
@@ -310,10 +307,11 @@ def view_recipe(recipe_id):
 
     ingredients = recipe['ingredients'].split('\n') if recipe['ingredients'] else []
     instructions = recipe['steps'].split('\n') if recipe['steps'] else []
+    appliances = recipe['appliances'].split('\n') if recipe['steps'] else []
     # optional for now must look deeper into
     comments = []
 
-    return render_template('recipe_card.html', recipe=recipe, ingredients=ingredients, instructions=instructions, comments=comments)
+    return render_template('recipe_card.html', recipe=recipe, ingredients=ingredients, instructions=instructions, appliances=appliances, comments=comments)
 
 
 @app.route('/recipe/<int:recipe_id>', methods=['POST'])
@@ -322,10 +320,10 @@ def show_recipe_card():
 
     db = get_db()
 
-    #This pulls the recipe itself
+    #this pulls the recipe itself
     recipe = db.execute("SELECT * FROM recipes WHERE id = ?", (recipe_id)).fetchone()
 
-    #Pulls the ingredients
+    # pulls the ingredients
     ingredients = db.execute("SELECT ingredient FROM ingredients WHERE id = ?", (recipe_id)).fetchall()
 
     comments = db.execute("SELECT comment_text FROM comments WHERE id = ?", (recipe_id)).fetchall()
@@ -337,11 +335,82 @@ def show_recipe_card():
     return render_template('recipe_card.html', recipe=recipe)
 
 
+@app.route('/add_to_cart/<int:recipe_id>', methods=['POST'])
+def add_to_cart(recipe_id):
+    db = get_db()
+    recipe = db.execute("SELECT title, ingredients FROM posts WHERE id = ?", (recipe_id,)).fetchone()
+
+    # if the recipe exists
+    if recipe:
+        # store title, all ingredients, and list seperated ingredients
+        title = recipe['title'] if isinstance(recipe, dict) else recipe[0]
+        ingredients_str = recipe['ingredients'] if isinstance(recipe, dict) else recipe[1]
+        ingredients_list = [item.strip() for item in ingredients_str.splitlines() if item.strip()]
+
+        # if the user does not currently have a cart, make them an empty one
+        if 'cart' not in session:
+            session['cart'] = []
+
+        # if there is nothing in the cart already add a dictionary with the desired information from the recipe within
+        if not any(isinstance(r, dict) and r.get('id') == recipe_id for r in session['cart']):
+            session['cart'].append({'id': recipe_id, 'title': title, 'ingredients': ingredients_list})
+            session.modified = True
+            flash(f'{title} ingredients added to your cart!', 'success')
+
+        # ensures the recipe can not be added a million times to the cart, only once
+        else:
+            flash(f'{title} is already in your cart.', 'info')
+
+    # this is a warning if something were to go wrong a simple catch-all
+    else:
+        flash('Recipe not found.', 'warning')
+
+    return redirect(url_for('show_cart'))
+
+
+@app.route('/show_cart')
+def show_cart():
+    return render_template('cart.html', cart=session.get("cart", []))
+
+
+@app.route('/remove_recipe/<int:recipe_id>', methods=['POST'])
+def remove_recipe(recipe_id):
+    cart = session.get('cart', [])
+    session['cart'] = [r for r in cart if r.get('id') != recipe_id]
+    session.modified = True
+    flash('Recipe removed from cart.', 'info')
+    return redirect(url_for('show_cart'))
+
+
+@app.route('/mark_item/<int:recipe_id>/<item>', methods=['POST'])
+def mark_item(recipe_id, item):
+    cart = session.get('cart', [])
+
+    for recipe in cart:
+        if recipe.get('id') == recipe_id:
+            # Remove the ingredient if it exists
+            if item in recipe['ingredients']:
+                recipe['ingredients'].remove(item)
+                flash(f"Marked off '{item}' from {recipe['title']}.", 'info')
+            break
+
+    session['cart'] = cart
+    session.modified = True
+    return redirect(url_for('show_cart'))
+
+
+@app.route('/clear_cart')
+def clear_cart():
+    session.pop('cart', None)
+    flash('Cart cleared.', 'info')
+    return redirect(url_for('show_cart'))
+
+
 @app.route('/user/<username>')
 def show_user_profile(username):
     return render_template('user_profile.html', username=username)
 
-app.route('/add_comment/<int:recipe_id>', methods=['POST'])
+@app.route('/add_comment/<int:recipe_id>', methods=['POST'])
 def add_comment(recipe_id):
     comment_text = request.form.get("comment")
 
@@ -350,3 +419,19 @@ def add_comment(recipe_id):
     db.commit()
 
     return redirect(url_for('show_recipe_card', recipe_id = recipe_id))
+
+@app.route('/follow_user', methods=['POST'])
+def follow_user():
+    if 'username' in session and 'username' in request.form:
+        db = get_db()
+        cur = db.execute("SELECT following FROM users WHERE username = ?",
+                              session['username'])
+        old_list = cur.fetchone()
+        new_list = old_list.split('|').append(request.form['username'])
+        new_text = new_list.join('|')
+        db.execute('UPDATE users SET following = new_text WHERE username = ?', session['username'])
+        return redirect(url_for('show_feed'))
+    else:
+        flash("Failed to follow user")
+        print_flashes()
+        return redirect(url_for('show_feed'))
