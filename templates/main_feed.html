@@ -60,6 +60,8 @@
       </div>
       
       {% if filtered_by_appliances %}
+
+      <! Alert to show user they are viewing recepes only u can do with uru appliances>
       <div class="alert alert-info">
         Showing recipes you can make with your appliances. 
         <a href="{{ url_for('show_feed') }}">View all recipes</a>
