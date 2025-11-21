@@ -1,4 +1,5 @@
 import os
+import json
 from sqlite3 import dbapi2 as sqlite3
 from flask import Flask, request, g, redirect, url_for, render_template, flash, get_flashed_messages, session
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -71,11 +72,14 @@ def register_user():
         user = cur.fetchone()
 
         if user is None:
-            db.execute('INSERT INTO users (username, password, first_name, last_name, favorite_food) VALUES (?, ?, ?, ?, ?)',
-                       [username, hashed_password, first_name, last_name, favorite_food])
+            # json.dumps() citation https://www.geeksforgeeks.org/python/json-loads-in-python/
+            db.execute('INSERT INTO users (username, password, first_name, last_name, favorite_food, cart) VALUES (?, ?, ?, ?, ?, ?)',
+                [username, hashed_password, first_name, last_name, favorite_food, json.dumps([])])
             db.commit()
+
             # store the username in a session variable
             session['username'] = username
+            session['cart'] = []
             flash("New account successfully registered", "info")
             return redirect(url_for('show_feed'))
         else:
@@ -87,22 +91,32 @@ def register_user():
 
 @app.route('/login', methods=['POST'])
 def login():
-    if "username" in request.form and "password" in request.form:
-        db = get_db()
+    db = get_db()
+    username = request.form['username']
+    password_input = request.form['password']
 
+    if "username" in request.form and "password" in request.form:
         # a more secure update to viewing hashed passwords
-        username = request.form['username']
-        password_input = request.form['password']
         user = db.execute('SELECT id, password FROM users WHERE username = ?',
                          [username]).fetchone()
 
-        # chck to see if the user has entered the correct information (hashed password)
+        # check to see if the user has entered the correct information (hashed password)
         if user and check_password_hash(user['password'], password_input):
             session['username'] = username
+
+            # set session cart to the values in the cart from when the user last logged out
+            stored_row = db.execute('SELECT cart FROM users WHERE username = ?',
+                                         [username]).fetchone()
+
+            # assign the cart variable if it exists otherwise initialize with an empty cart
+            # json.loads() citation https://www.geeksforgeeks.org/python/json-loads-in-python/
+            session['cart'] = json.loads(stored_row['cart']) if stored_row and stored_row['cart'] else []
+
+            # log them into their account
             flash("Successfully logged into account", "info")
             return redirect(url_for('show_feed'))
 
-        # if username/password do not match
+        # if username/password are not in the input (this should never happen bc fields are required but safe check)
         else:
             flash("Invalid username or password", "error")
             return render_template('login.html')
@@ -110,6 +124,17 @@ def login():
 
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
+    username = session['username']
+    db = get_db()
+
+    # store the current cart in the users table to be fetched later when the user logs back in
+    adding_cart = session['cart']
+    # json.dumps() citation https://www.geeksforgeeks.org/python/json-loads-in-python/
+    db.execute('UPDATE users SET cart=? WHERE username=?', [json.dumps(adding_cart), username])
+    db.commit()
+
+    # remove the current cart session variable so it does not carry over into the next logged-in user
+    session['cart'] = []
     session['username'] = None
     return render_template('login.html')
 
@@ -325,18 +350,16 @@ def add_to_cart(recipe_id):
 
     # if the recipe exists
     if recipe:
-        # store title, all ingredients, and list seperated ingredients slipt by the return from the input
+        # store title, all ingredients, and list seperated ingredients split by the return from the input
+        # had to look up some help of how to structure it (restructuring to fix all same cart error)
         title = recipe['title'] if isinstance(recipe, dict) else recipe[0]
         ingredients_str = recipe['ingredients'] if isinstance(recipe, dict) else recipe[1]
         ingredients_list = [item.strip() for item in ingredients_str.splitlines() if item.strip()]
 
-        # if the user does not currently have a cart, make them an empty one
-        if 'cart' not in session:
-            session['cart'] = []
-
         # if there is nothing in the cart already add a dictionary with the desired information from the recipe within
         if not any(isinstance(r, dict) and r.get('id') == recipe_id for r in session['cart']):
-            session['cart'].append({'id': recipe_id, 'title': title, 'ingredients': ingredients_list})
+            item_to_add = {'id': recipe_id, 'title': title, 'ingredients': ingredients_list}
+            session['cart'].append(item_to_add)
             session.modified = True
             flash(f'{title} ingredients added to your cart!', 'success')
 
