@@ -330,7 +330,7 @@ def show_recipe_card():
     return render_template('recipe_card.html', recipe = recipe, ingredients = ingredients, comments = comments)
     #return render_template('recipe_card.html')
 
-    # open the recipe_card.html file
+    #open the recipe_card.html file
     return render_template('recipe_card.html', recipe=recipe)
 
 @app.route('/add_to_cart/<int:recipe_id>', methods=['POST'])
@@ -370,7 +370,7 @@ def show_cart():
 def show_user_profile(username):
     return render_template('user_profile.html', username=username)
 
-app.route('/add_comment/<int:recipe_id>', methods=['POST'])
+@app.route('/add_comment/<int:recipe_id>', methods=['POST'])
 def add_comment(recipe_id):
     comment_text = request.form.get("comment")
 
@@ -379,3 +379,7 @@ def add_comment(recipe_id):
     db.commit()
 
     return redirect(url_for('show_recipe_card', recipe_id = recipe_id))
+
+
+if __name__ == '__main__':
+    app.run()
