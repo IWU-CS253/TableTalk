@@ -1,6 +1,20 @@
 {% extends "layout.html" %}
 
 {% block content %}
+
+<! Section to flash bootstrap alerts>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show mt-3" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+
 <div class="container-fluid mt-4">
   <div class="row">
     <! Sidebar for Friend Cards>
@@ -33,9 +47,16 @@
     <div class="col-md-9">
       <h5 class="mb-3">Main Feed</h5>
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#recipeModal">Add New Recipe</button>
-
+        <div>
+          <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#recipeModal">
+            Add New Recipe
+          </button>
+          <a href="{{ url_for('filter_by_appliances') }}" class="btn btn-outline-success">
+            Recipes I Can Make
+          </a>
+        </div>
         <! Ability to filter posts to a users liking and the default shows all posts>
+
         <form method="get" action="{{ url_for('filter_posts') }}" class="d-flex align-items-center mb-3">
           <select name="filter_category" class="form-select w-auto me-2" data-role="filter">
             <option value="FILTER POSTS" {% if selected_category == 'FILTER POSTS' or not selected_category %}selected{% endif %}>FILTER POSTS</option>
@@ -51,6 +72,13 @@
           </select>
         </form>
       </div>
+      
+      {% if filtered_by_appliances %}
+      <div class="alert alert-info">
+        Showing recipes you can make with your appliances. 
+        <a href="{{ url_for('show_feed') }}">View all recipes</a>
+      </div>
+      {% endif %}
 
       <! Display all the posts in the database>
       {% for post in posts %}
@@ -103,7 +131,8 @@
                     data-title="{{ post.title }}"
                     data-category="{{ post.category }}"
                     data-ingredients="{{ post.ingredients | escape }}"
-                    data-steps="{{ post.steps | escape }}">
+                    data-steps="{{ post.steps | escape }}"
+                    data-appliances="{{ post.appliances | escape }}">
               Edit</button>
           </div>
           {% endif %}
@@ -212,9 +241,9 @@
                   <label for="edit-steps" class="form-label">Steps</label>
                   <textarea class="form-control" id="edit-steps" name="steps" rows="5" required></textarea>
                 </div>
-                  <! Appliances>
+                <! Appliances>
                 <div class="mb-3">
-                  <label for="edit-appliances" class="form-label">Steps</label>
+                  <label for="edit-appliances" class="form-label">Appliances</label>
                   <textarea class="form-control" id="edit-appliances" name="appliances" rows="4" required></textarea>
                 </div>
               </div>
@@ -240,7 +269,8 @@
     document.getElementById('edit-title').value = button.getAttribute('data-title');
     document.getElementById('edit-category').value = button.getAttribute('data-category');
     document.getElementById('edit-ingredients').value = button.getAttribute('data-ingredients');
-    document.getElementById('edit-steps').value = button.getAttribute('data-steps');});
+    document.getElementById('edit-steps').value = button.getAttribute('data-steps');
+    document.getElementById('edit-appliances').value = button.getAttribute('data-appliances');});
 
     document.querySelectorAll('select[data-role="filter"]').forEach(select => {select.addEventListener('change', () => {select.form.submit();});});
 </script>

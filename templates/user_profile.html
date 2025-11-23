@@ -1,14 +1,89 @@
 {% extends "layout.html" %}
 
 {% block content %}
+    <header>
+        <h1>TableTalk</h1>
+        <nav>
+            <a href="{{ url_for('show_feed') }}">Feed</a>
+            <a href="{{ url_for('show_cart') }}">Cart</a>
+            <a href="{{ url_for('my_profile') }}">My Profile</a>
+            <a href="{{ url_for('logout') }}">Log Out</a>
+        </nav>
+    </header>
+
     <main>
         <section class="profile-info">
+            <!-- pulling user info dynamically -->
             <h2>{{ user.username }}</h2>
-            <p>Favorite Food: {{ user.favorite_food }}</p>
+            <p>Email: {{ user.email }}</p>
 
-            <! Commenting out bc not yet enabling profile pictures>
-            <!--<img src="{{ user.profile_picture }}" alt=" Profile Picture"/>-->
+            <img src="{{ user.profile_picture }}" alt=" Profile Picture"/>
+            <!--
+        <img src="https://via.placeholder.com/150" alt="Profile picture" class="profile-pic">
+        <h2>User Name</h2>
+        <p>Email: user@email.com</p>
+            -->
         </section>
+
+
+        <!-- Kitchen Appliances Section -->
+        <h3>Kitchen Appliances</h3>
+        <p>DEBUG: user username = {{ user['username'] }}</p>
+        <p>DEBUG: session username = {{ session['username'] }}</p>
+        <p>DEBUG: Are they equal? {{ user['username'] == session['username'] }}</p>
+        <section class="mt-4">
+            <h3>Kitchen Appliances</h3>
+            
+            {% if user['username'] == session['username'] %}
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#appliancesModal">
+                    Edit Appliances
+                </button>
+            {% endif %}
+            
+            {% if appliances %}
+                <div class="mt-3">
+                    {% if appliances['stove'] %}
+                        <span class="badge bg-success m-1">Stove</span>
+                    {% endif %}
+                    
+                    {% if appliances['oven'] %}
+                        <span class="badge bg-success m-1">Oven</span>
+                    {% endif %}
+                    
+                    {% if appliances['microwave'] %}
+                        <span class="badge bg-success m-1">Microwave</span>
+                    {% endif %}
+                    
+                    {% if appliances['blender'] %}
+                        <span class="badge bg-success m-1">Blender</span>
+                    {% endif %}
+                    
+                    {% if appliances['toaster'] %}
+                        <span class="badge bg-success m-1">Toaster</span>
+                    {% endif %}
+                    
+                    {% if appliances['air_fryer'] %}
+                        <span class="badge bg-success m-1">Air Fryer</span>
+                    {% endif %}
+                    
+                    {% if appliances['slow_cooker'] %}
+                        <span class="badge bg-success m-1">Slow Cooker</span>
+                    {% endif %}
+                    
+                    {% if appliances['pressure_cooker'] %}
+                        <span class="badge bg-success m-1">Pressure Cooker</span>
+                    {% endif %}
+                    
+                    {% if appliances['grill'] %}
+                        <span class="badge bg-success m-1">Grill</span>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p class="text-muted">No appliances added</p>
+            {% endif %}
+        </section>
+
+
 
         <!-- User's recipes section -->
         <section class="user-recipes">
@@ -19,41 +94,115 @@
                 <ul>
                     {% for recipe in recipes %}
                         <li>
-                            <a href="{{ url_for('recipe_detail', recipe_id=recipe_id) }}">
-                                {{ recipe.title }}
+                            <a href="{{ url_for('view_recipe', recipe_id=recipe['id']) }}">
+                                {{ recipe['title'] }}
                             </a>
                         </li>
-                    {% end for %}
-            {% else %}
+                    {% endfor %}
                 </ul>
-
             {% else %}
-            <! Add a prompted button to post their first recipe and take them to the modal pop up>
             <p>No recipes posted yet</p>
             {% endif %}
-
         </section>
 
-        {% if user.username == session['username'] %}
-          <div class="mt-2">
-            <! Delete Button>
-            <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" style="display:inline;">
-              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-            </form>
 
-            <! Edit Button>
-            <button type="button"
-                    class="btn btn-warning btn-sm"
-                    data-bs-toggle="modal"
-                    data-bs-target="#editModal"
-                    data-id="{{ post.id }}"
-                    data-title="{{ post.title }}"
-                    data-category="{{ post.category }}"
-                    data-ingredients="{{ post.ingredients | escape }}"
-                    data-steps="{{ post.steps | escape }}">
-              Edit</button>
-          </div>
-        {% endif %}
+    <!-- Appliances Edit Popup Modal -->
+    {% if user['username'] == session['username'] %}
+    <div class="modal fade" id="appliancesModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="{{ url_for('add_appliance') }}">
+                    
+                    <div class="modal-header">
+                        <h5>My Kitchen Appliances</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="stove" value="1" 
+                                {% if appliances and appliances['stove'] %}
+                                    checked
+                                {% endif %}>
+                            <label class="form-check-label">Stove</label>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="oven" value="1"
+                                {% if appliances and appliances['oven'] %}
+                                    checked
+                                {% endif %}>
+                            <label class="form-check-label">Oven</label>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="microwave" value="1"
+                                {% if appliances and appliances['microwave'] %}
+                                    checked
+                                {% endif %}>
+                            <label class="form-check-label">Microwave</label>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="blender" value="1"
+                                {% if appliances and appliances['blender'] %}
+                                    checked
+                                {% endif %}>
+                            <label class="form-check-label">Blender</label>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="toaster" value="1"
+                                {% if appliances and appliances['toaster'] %}
+                                    checked
+                                {% endif %}>
+                            <label class="form-check-label">Toaster</label>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="air_fryer" value="1"
+                                {% if appliances and appliances['air_fryer'] %}
+                                    checked
+                                {% endif %}>
+                            <label class="form-check-label">Air Fryer</label>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="slow_cooker" value="1"
+                                {% if appliances and appliances['slow_cooker'] %}
+                                    checked
+                                {% endif %}>
+                            <label class="form-check-label">Slow Cooker</label>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="pressure_cooker" value="1"
+                                {% if appliances and appliances['pressure_cooker'] %}
+                                    checked
+                                {% endif %}>
+                            <label class="form-check-label">Pressure Cooker</label>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="grill" value="1"
+                                {% if appliances and appliances['grill'] %}
+                                    checked
+                                {% endif %}>
+                            <label class="form-check-label">Grill</label>
+                        </div>
+                        
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Save</button>
+                    </div>
+                    
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     </main>
 
