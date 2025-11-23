@@ -23,6 +23,9 @@ def client():
 
 def test_welcome_page(client):
     """Testing to make sure the page loads"""
+    response = client.get('/')
+    assert b"login" in response.data.lower()
+    assert b"username" in response.data.lower()
 
 def test_invalid_logins(client):
     """Testing what happens when invalid logins are submitted"""
