@@ -1,12 +1,13 @@
 import os
 from sqlite3 import dbapi2 as sqlite3
 from flask import Flask, request, g, redirect, url_for, render_template, flash, get_flashed_messages, session
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
 # look to see if you can store multiple attributes in the session data or just the username
 # need to figure out how to use this
-app.secret_key = 'your_secret_key'  # Required for session and flash
+app.secret_key = 'table_talk_secret_key'
 
 app.config.update(dict(
     DATABASE=os.path.join(app.root_path, 'tabletalk.db'),
@@ -60,7 +61,8 @@ def register_user():
 
         # make easy access stored variable
         username = request.form.get('username')
-        password = request.form.get('password')
+        raw_password = request.form.get('password')
+        hashed_password = generate_password_hash(raw_password)
         first_name = request.form.get('first_name')
         last_name = request.form.get('last_name')
         favorite_food = request.form.get('favorite_food')
@@ -70,9 +72,10 @@ def register_user():
 
         if user is None:
             db.execute('INSERT INTO users (username, password, first_name, last_name, favorite_food) VALUES (?, ?, ?, ?, ?)',
-                       [username, password, first_name, last_name, favorite_food])
+                       [username, hashed_password, first_name, last_name, favorite_food])
             db.commit()
-            session['username'] = username  # Store user in session
+            # store the username in a session variable
+            session['username'] = username
             flash("New account successfully registered", "info")
             return redirect(url_for('show_feed'))
         else:
@@ -86,25 +89,24 @@ def register_user():
 def login():
     if "username" in request.form and "password" in request.form:
         db = get_db()
-        cur = db.execute('SELECT id FROM users WHERE username = ? AND password = ?',
-                         [request.form['username'], request.form['password']])
-        user = cur.fetchone()
-        if user is not None:
-            # update session
-            session['username'] = request.form['username']
 
+        # a more secure update to viewing hashed passwords
+        username = request.form['username']
+        password_input = request.form['password']
+        user = db.execute('SELECT id, password FROM users WHERE username = ?',
+                         [username]).fetchone()
+
+        # chck to see if the user has entered the correct information (hashed password)
+        if user and check_password_hash(user['password'], password_input):
+            session['username'] = username
             flash("Successfully logged into account", "info")
-            print_flashes()
             return redirect(url_for('show_feed'))
+
+        # if username/password do not match
         else:
-            flash("Username does not exist", "error")
-            print_flashes()
-            # this needs to return a flash to users so they know as well not just a flash to the terminal
+            flash("Invalid username or password", "error")
             return render_template('login.html')
-    else:
-        flash("Invalid username or password", "error")
-        print_flashes()
-        return render_template('login.html')
+
 
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
@@ -401,7 +403,8 @@ def edit_post():
 @app.route('/view_recipe/<int:recipe_id>', methods=['GET', 'POST'])
 def view_recipe(recipe_id):
     db = get_db()
-    recipe = db.execute('SELECT * FROM posts WHERE id = ?', (recipe_id,)).fetchone()
+    recipe = db.execute('SELECT * FROM posts WHERE id = ?',
+                        (recipe_id,)).fetchone()
 
     if recipe is None:
         flash("Recipe not found", "error")
@@ -416,35 +419,16 @@ def view_recipe(recipe_id):
     return render_template('recipe_card.html', recipe=recipe, ingredients=ingredients, instructions=instructions, appliances=appliances, comments=comments)
 
 
-@app.route('/recipe/<int:recipe_id>', methods=['POST'])
-def show_recipe_card():
-    recipe_id = request.form.get("recipe_id")
-
-    db = get_db()
-
-    #this pulls the recipe itself
-    recipe = db.execute("SELECT * FROM recipes WHERE id = ?", (recipe_id)).fetchone()
-
-    # pulls the ingredients
-    ingredients = db.execute("SELECT ingredient FROM ingredients WHERE id = ?", (recipe_id)).fetchall()
-
-    comments = db.execute("SELECT comment_text FROM comments WHERE id = ?", (recipe_id)).fetchall()
-
-    return render_template('recipe_card.html', recipe = recipe, ingredients = ingredients, comments = comments)
-    #return render_template('recipe_card.html')
-
-    # open the recipe_card.html file
-    return render_template('recipe_card.html', recipe=recipe)
-
 
 @app.route('/add_to_cart/<int:recipe_id>', methods=['POST'])
 def add_to_cart(recipe_id):
     db = get_db()
-    recipe = db.execute("SELECT title, ingredients FROM posts WHERE id = ?", (recipe_id,)).fetchone()
+    recipe = db.execute("SELECT title, ingredients FROM posts WHERE id = ?",
+                        (recipe_id,)).fetchone()
 
     # if the recipe exists
     if recipe:
-        # store title, all ingredients, and list seperated ingredients
+        # store title, all ingredients, and list seperated ingredients slipt by the return from the input
         title = recipe['title'] if isinstance(recipe, dict) else recipe[0]
         ingredients_str = recipe['ingredients'] if isinstance(recipe, dict) else recipe[1]
         ingredients_list = [item.strip() for item in ingredients_str.splitlines() if item.strip()]
@@ -463,7 +447,7 @@ def add_to_cart(recipe_id):
         else:
             flash(f'{title} is already in your cart.', 'info')
 
-    # this is a warning if something were to go wrong a simple catch-all
+    # this is a warning if something were to go wrong- a simple catch-all
     else:
         flash('Recipe not found.', 'warning')
 
