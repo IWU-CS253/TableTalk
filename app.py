@@ -1,4 +1,5 @@
 import os
+import json
 from sqlite3 import dbapi2 as sqlite3
 from flask import Flask, request, g, redirect, url_for, render_template, flash, get_flashed_messages, session
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -71,11 +72,14 @@ def register_user():
         user = cur.fetchone()
 
         if user is None:
-            db.execute('INSERT INTO users (username, password, first_name, last_name, favorite_food) VALUES (?, ?, ?, ?, ?)',
-                       [username, hashed_password, first_name, last_name, favorite_food])
+            # json.dumps() citation https://www.geeksforgeeks.org/python/json-loads-in-python/
+            db.execute('INSERT INTO users (username, password, first_name, last_name, favorite_food, cart) VALUES (?, ?, ?, ?, ?, ?)',
+                [username, hashed_password, first_name, last_name, favorite_food, json.dumps([])])
             db.commit()
+
             # store the username in a session variable
             session['username'] = username
+            session['cart'] = []
             flash("New account successfully registered", "info")
             return redirect(url_for('show_feed'))
         else:
@@ -87,22 +91,32 @@ def register_user():
 
 @app.route('/login', methods=['POST'])
 def login():
-    if "username" in request.form and "password" in request.form:
-        db = get_db()
+    db = get_db()
+    username = request.form['username']
+    password_input = request.form['password']
 
+    if "username" in request.form and "password" in request.form:
         # a more secure update to viewing hashed passwords
-        username = request.form['username']
-        password_input = request.form['password']
         user = db.execute('SELECT id, password FROM users WHERE username = ?',
                          [username]).fetchone()
 
-        # chck to see if the user has entered the correct information (hashed password)
+        # check to see if the user has entered the correct information (hashed password)
         if user and check_password_hash(user['password'], password_input):
             session['username'] = username
+
+            # set session cart to the values in the cart from when the user last logged out
+            stored_row = db.execute('SELECT cart FROM users WHERE username = ?',
+                                         [username]).fetchone()
+
+            # assign the cart variable if it exists otherwise initialize with an empty cart
+            # json.loads() citation https://www.geeksforgeeks.org/python/json-loads-in-python/
+            session['cart'] = json.loads(stored_row['cart']) if stored_row and stored_row['cart'] else []
+
+            # log them into their account
             flash("Successfully logged into account", "info")
             return redirect(url_for('show_feed'))
 
-        # if username/password do not match
+        # if username/password are not in the input (this should never happen bc fields are required but safe check)
         else:
             flash("Invalid username or password", "error")
             return render_template('login.html')
@@ -110,6 +124,17 @@ def login():
 
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
+    username = session['username']
+    db = get_db()
+
+    # store the current cart in the users table to be fetched later when the user logs back in
+    adding_cart = session['cart']
+    # json.dumps() citation https://www.geeksforgeeks.org/python/json-loads-in-python/
+    db.execute('UPDATE users SET cart=? WHERE username=?', [json.dumps(adding_cart), username])
+    db.commit()
+
+    # remove the current cart session variable so it does not carry over into the next logged-in user
+    session['cart'] = []
     session['username'] = None
     return render_template('login.html')
 
@@ -121,7 +146,9 @@ def show_feed():
         username = session['username']
 
         # find user id using the session username
-        user_row = db.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone()
+        user_row = db.execute('SELECT id FROM users WHERE username = ?',
+                              (username,)).fetchone()
+
         if not user_row:
             flash("User not found in database", "error")
             return redirect(url_for('login'))
@@ -132,7 +159,8 @@ def show_feed():
         feed = db.execute('SELECT * FROM posts ORDER BY id DESC').fetchall()
 
         # get all users except the one logged into the current session
-        friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ? ORDER BY id DESC', (user_id,)).fetchall()
+        friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ? ORDER BY id DESC',
+                             (user_id,)).fetchall()
 
         return render_template('main_feed.html', posts=feed, suggested_friends=friends)
 
@@ -295,53 +323,66 @@ def tag_appliance():
 
 @app.route('/filter_by_appliances')
 def filter_by_appliances():
+    db = get_db()
+    username = session['username']
+
+    # make sure user is logged in check
     if 'username' not in session:
         return redirect(url_for('welcome_page'))
-    
-    db = get_db()
-    user_row = db.execute('SELECT id FROM users WHERE username = ?', [session['username']]).fetchone()
+
+    # get the user's data from the appliances table from the users table
+    user_row = db.execute('SELECT id FROM users WHERE username = ?',
+                          [username]).fetchone()
     user_id = user_row['id']
-    
-    user_app = db.execute('SELECT * FROM appliances WHERE user_id = ?', [user_id]).fetchone()
-    
-    if not user_app:
+    user_appliances = db.execute('SELECT * FROM appliances WHERE user_id = ?',
+                                 [user_id]).fetchone()
+
+    # grab all posts to be filtered and make a return variable
+    posts = db.execute('SELECT * FROM posts ORDER BY id DESC').fetchall()
+    filtered = []
+
+    # if the user does not have any stored appliances before filtering, redirect them to add some first
+    if not user_appliances:
         flash("Add your appliances first!")
         return redirect(url_for('my_profile'))
-    
-    all_posts = db.execute('SELECT * FROM posts ORDER BY id DESC').fetchall()
-    filtered = []
-    
-    for post in all_posts:
-        post_app = db.execute('SELECT * FROM appliances WHERE post_id = ?', [post['id']]).fetchone()
+
+    # begin filtering posts by appliances
+    for post in posts:
+        post_app = db.execute('SELECT * FROM appliances WHERE post_id = ?',
+                              [post['id']]).fetchone()
         
         if not post_app:
             filtered.append(post)
             continue
         
-        can_make = True
-        if post_app['stove'] and not user_app['stove']:
-            can_make = False
-        if post_app['oven'] and not user_app['oven']:
-            can_make = False
-        if post_app['microwave'] and not user_app['microwave']:
-            can_make = False
-        if post_app['blender'] and not user_app['blender']:
-            can_make = False
-        if post_app['toaster'] and not user_app['toaster']:
-            can_make = False
-        if post_app['air_fryer'] and not user_app['air_fryer']:
-            can_make = False
-        if post_app['slow_cooker'] and not user_app['slow_cooker']:
-            can_make = False
-        if post_app['pressure_cooker'] and not user_app['pressure_cooker']:
-            can_make = False
-        if post_app['grill'] and not user_app['grill']:
-            can_make = False
+        can_make = False
+        if post_app['stove'] and user_appliances['stove']:
+            can_make = True
+        if post_app['oven'] and user_appliances['oven']:
+            can_make = True
+        if post_app['microwave'] and user_appliances['microwave']:
+            can_make = True
+        if post_app['blender'] and user_appliances['blender']:
+            can_make = True
+        if post_app['toaster'] and user_appliances['toaster']:
+            can_make = True
+        if post_app['air_fryer'] and user_appliances['air_fryer']:
+            can_make = True
+        if post_app['slow_cooker'] and user_appliances['slow_cooker']:
+            can_make = True
+        if post_app['pressure_cooker'] and user_appliances['pressure_cooker']:
+            can_make = True
+        if post_app['grill'] and user_appliances['grill']:
+            can_make = True
         
         if can_make:
             filtered.append(post)
-    
-    friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ?', [user_id]).fetchall()
+
+    # pass all friends in to be viewed on the friends aside
+    friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ?',
+                         [user_id]).fetchall()
+
+    # return a render of template with specified posts and friends lists
     return render_template('main_feed.html', posts=filtered, suggested_friends=friends, filtered_by_appliances=True)
 
 
@@ -386,18 +427,25 @@ def delete_post(post_id):
 
 @app.route('/edit_post', methods=['POST'])
 def edit_post():
+    db = get_db()
+
+    # store the fields as easy to name variables
     post_id = request.form['id']
     title = request.form['title']
     category = request.form['category']
     ingredients = request.form['ingredients']
     steps = request.form['steps']
+    appliances = request.form.getlist('appliances')
 
-    db = get_db()
+    # make the list into a string so it can be stored in the database
+    appliances_str = ",".join(appliances)
 
     # this has an un-needed (but helpful double-check) conditional to check the user owns the post before actually executing the edit on the post
-    db.execute("""UPDATE posts SET title = ?, category = ?, ingredients = ?, steps = ? WHERE id = ? AND username = ?""",
-               (title, category, ingredients, steps, post_id, session['username']))
+    db.execute("""UPDATE posts SET title=?, category=?, ingredients=?, steps=?, appliances=? WHERE id=? AND username=?""",
+               (title, category, ingredients, steps, appliances_str, post_id, session['username']))
+
     db.commit()
+    flash("Post edited successfully", "info")
     return redirect(url_for('show_feed'))
 
 @app.route('/view_recipe/<int:recipe_id>', methods=['GET', 'POST'])
@@ -428,18 +476,16 @@ def add_to_cart(recipe_id):
 
     # if the recipe exists
     if recipe:
-        # store title, all ingredients, and list seperated ingredients slipt by the return from the input
+        # store title, all ingredients, and list seperated ingredients split by the return from the input
+        # had to look up some help of how to structure it (restructuring to fix all same cart error)
         title = recipe['title'] if isinstance(recipe, dict) else recipe[0]
         ingredients_str = recipe['ingredients'] if isinstance(recipe, dict) else recipe[1]
         ingredients_list = [item.strip() for item in ingredients_str.splitlines() if item.strip()]
 
-        # if the user does not currently have a cart, make them an empty one
-        if 'cart' not in session:
-            session['cart'] = []
-
         # if there is nothing in the cart already add a dictionary with the desired information from the recipe within
         if not any(isinstance(r, dict) and r.get('id') == recipe_id for r in session['cart']):
-            session['cart'].append({'id': recipe_id, 'title': title, 'ingredients': ingredients_list})
+            item_to_add = {'id': recipe_id, 'title': title, 'ingredients': ingredients_list}
+            session['cart'].append(item_to_add)
             session.modified = True
             flash(f'{title} ingredients added to your cart!', 'success')
 
