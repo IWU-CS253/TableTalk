@@ -411,19 +411,25 @@ def delete_post(post_id):
 
 @app.route('/edit_post', methods=['POST'])
 def edit_post():
+    db = get_db()
+
+    # store the fields as easy to name variables
     post_id = request.form['id']
     title = request.form['title']
     category = request.form['category']
     ingredients = request.form['ingredients']
     steps = request.form['steps']
-    appliances = request.form['appliances']
+    appliances = request.form.getlist('appliances')
 
-    db = get_db()
+    # make the list into a string so it can be stored in the database
+    appliances_str = ",".join(appliances)
 
     # this has an un-needed (but helpful double-check) conditional to check the user owns the post before actually executing the edit on the post
-    db.execute("""UPDATE posts SET title = ?, category = ?, ingredients = ?, steps = ?, appliances = ? WHERE id = ? AND username = ?""",
-               (title, category, ingredients, steps, appliances, post_id, session['username']))
+    db.execute("""UPDATE posts SET title=?, category=?, ingredients=?, steps=?, appliances=? WHERE id=? AND username=?""",
+               (title, category, ingredients, steps, appliances_str, post_id, session['username']))
+
     db.commit()
+    flash("Post edited successfully", "info")
     return redirect(url_for('show_feed'))
 
 @app.route('/view_recipe/<int:recipe_id>', methods=['GET', 'POST'])

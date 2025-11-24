@@ -106,18 +106,20 @@
 
           <! Display needed appliances>
           <p><strong>Appliances Needed:</strong></p>
-          <ul class="list-group mb-3">
-            {% for appliance in post.appliances.split('\n') %}
-            <li class="list-group-item">{{ appliance }}</li>
-            {% endfor %}
-          </ul>
+            <ul class="list-group mb-3">
+              {% for appliance in post.appliances.split(',') %}
+                <li class="list-group-item">{{ appliance.strip() }}</li>
+              {% endfor %}
+            </ul>
+
 
           <! Enable edit and delete buttons IF AND ONLY IF the user logged in owns that post>
           {% if post.username == session['username'] %}
 
           <! This keeps the optional edit and delete buttons outside the clickable wrapper section to open recipe_card.html>
           <div class="mt-2">
-              <! Delete Button>
+
+            <! Delete Button>
             <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" style="display:inline;">
               <button type="submit" class="btn btn-danger btn-sm">Delete</button>
             </form>
@@ -187,8 +189,27 @@
 
                 <! Insert Appliances>
                 <div class="mb-3">
-                  <label for="recipeAppliances" class="form-label">Appliances Needed</label>
-                  <textarea class="form-control" id="recipeAppliances" name="appliances" rows="4"></textarea>
+                    <label class="form-label">Appliances Needed</label>
+                    <div class="btn-group flex-wrap" role="group" aria-label="Appliances">
+                      <label class="btn btn-outline-success m-1" for="stove">Stove</label>
+                        <input type="checkbox" class="btn-check" id="stove" name="appliances" value="Stove">
+                      <label class="btn btn-outline-success m-1" for="oven">Oven</label>
+                        <input type="checkbox" class="btn-check" id="oven" name="appliances" value="Oven">
+                      <label class="btn btn-outline-success m-1" for="microwave">Microwave</label>
+                        <input type="checkbox" class="btn-check" id="microwave" name="appliances" value="Microwave">
+                      <label class="btn btn-outline-success m-1" for="blender">Blender</label>
+                        <input type="checkbox" class="btn-check" id="blender" name="appliances" value="Blender">
+                      <label class="btn btn-outline-success m-1" for="toaster">Toaster</label>
+                        <input type="checkbox" class="btn-check" id="toaster" name="appliances" value="Toaster">
+                      <label class="btn btn-outline-success m-1" for="air_fryer">Air Fryer</label>
+                        <input type="checkbox" class="btn-check" id="air_fryer" name="appliances" value="Air Fryer">
+                      <label class="btn btn-outline-success m-1" for="slow_cooker">Slow Cooker</label>
+                        <input type="checkbox" class="btn-check" id="slow_cooker" name="appliances" value="Slow Cooker">
+                      <label class="btn btn-outline-success m-1" for="pressure_cooker">Pressure Cooker</label>
+                        <input type="checkbox" class="btn-check" id="pressure_cooker" name="appliances" value="Pressure Cooker">
+                      <label class="btn btn-outline-success m-1" for="grill">Grill</label>
+                        <input type="checkbox" class="btn-check" id="grill" name="appliances" value="Grill">
+                    </div>
                 </div>
               </div>
 
@@ -218,6 +239,7 @@
                   <input type="text" class="form-control" id="edit-title" name="title" required>
                 </div>
                 <div class="mb-3">
+                  <! Category dropdown>
                   <label for="edit-category" class="form-label">Category</label>
                   <select class="form-select" id="edit-category" name="category" required>
                     <option>American</option>
@@ -231,22 +253,63 @@
                     <option>Other</option>
                   </select>
                 </div>
-                  <! Ingredients>
+
+                <! Ingredients>
                 <div class="mb-3">
                   <label for="edit-ingredients" class="form-label">Ingredients & Measurements</label>
                   <textarea class="form-control" id="edit-ingredients" name="ingredients" rows="3" required></textarea>
                 </div>
-                  <! Steps>
+
+                <! Steps>
                 <div class="mb-3">
                   <label for="edit-steps" class="form-label">Steps</label>
                   <textarea class="form-control" id="edit-steps" name="steps" rows="5" required></textarea>
                 </div>
+
                 <! Appliances>
                 <div class="mb-3">
-                  <label for="edit-appliances" class="form-label">Appliances</label>
-                  <textarea class="form-control" id="edit-appliances" name="appliances" rows="4" required></textarea>
+                  <label class="form-label">Appliances</label>
+                  <div class="btn-group flex-wrap" role="group" aria-label="Appliances">
+
+                    <input type="checkbox" class="btn-check" id="edit-stove" name="appliances" value="stove"
+                           {% if appliances and 'stove' in appliances %}checked{% endif %}>
+                    <label class="btn btn-outline-success m-1" for="edit-stove">Stove</label>
+
+                    <input type="checkbox" class="btn-check" id="edit-oven" name="appliances" value="oven"
+                           {% if appliances and 'oven' in appliances %}checked{% endif %}>
+                    <label class="btn btn-outline-success m-1" for="edit-oven">Oven</label>
+
+                    <input type="checkbox" class="btn-check" id="edit-microwave" name="appliances" value="microwave"
+                           {% if appliances and 'microwave' in appliances %}checked{% endif %}>
+                    <label class="btn btn-outline-success m-1" for="edit-microwave">Microwave</label>
+
+                    <input type="checkbox" class="btn-check" id="edit-blender" name="appliances" value="blender"
+                           {% if appliances and 'blender' in appliances %}checked{% endif %}>
+                    <label class="btn btn-outline-success m-1" for="edit-blender">Blender</label>
+
+                    <input type="checkbox" class="btn-check" id="edit-toaster" name="appliances" value="toaster"
+                           {% if appliances and 'toaster' in appliances %}checked{% endif %}>
+                    <label class="btn btn-outline-success m-1" for="edit-toaster">Toaster</label>
+
+                    <input type="checkbox" class="btn-check" id="edit-airfryer" name="appliances" value="air_fryer"
+                           {% if appliances and 'air_fryer' in appliances %}checked{% endif %}>
+                    <label class="btn btn-outline-success m-1" for="edit-airfryer">Air Fryer</label>
+
+                    <input type="checkbox" class="btn-check" id="edit-slowcooker" name="appliances" value="slow_cooker"
+                           {% if appliances and 'slow_cooker' in appliances %}checked{% endif %}>
+                    <label class="btn btn-outline-success m-1" for="edit-slowcooker">Slow Cooker</label>
+
+                    <input type="checkbox" class="btn-check" id="edit-pressurecooker" name="appliances" value="pressure_cooker"
+                           {% if appliances and 'pressure_cooker' in appliances %}checked{% endif %}>
+                    <label class="btn btn-outline-success m-1" for="edit-pressurecooker">Pressure Cooker</label>
+
+                    <input type="checkbox" class="btn-check" id="edit-grill" name="appliances" value="grill"
+                           {% if appliances and 'grill' in appliances %}checked{% endif %}>
+                    <label class="btn btn-outline-success m-1" for="edit-grill">Grill</label>
+                  </div>
                 </div>
               </div>
+
               <div class="modal-footer">
                 <button type="submit" class="btn btn-success">Update Recipe</button>
               </div>
