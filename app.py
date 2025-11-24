@@ -146,7 +146,9 @@ def show_feed():
         username = session['username']
 
         # find user id using the session username
-        user_row = db.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone()
+        user_row = db.execute('SELECT id FROM users WHERE username = ?',
+                              (username,)).fetchone()
+
         if not user_row:
             flash("User not found in database", "error")
             return redirect(url_for('login'))
@@ -157,7 +159,8 @@ def show_feed():
         feed = db.execute('SELECT * FROM posts ORDER BY id DESC').fetchall()
 
         # get all users except the one logged into the current session
-        friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ? ORDER BY id DESC', (user_id,)).fetchall()
+        friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ? ORDER BY id DESC',
+                             (user_id,)).fetchall()
 
         return render_template('main_feed.html', posts=feed, suggested_friends=friends)
 
@@ -320,53 +323,66 @@ def tag_appliance():
 
 @app.route('/filter_by_appliances')
 def filter_by_appliances():
+    db = get_db()
+    username = session['username']
+
+    # make sure user is logged in check
     if 'username' not in session:
         return redirect(url_for('welcome_page'))
-    
-    db = get_db()
-    user_row = db.execute('SELECT id FROM users WHERE username = ?', [session['username']]).fetchone()
+
+    # get the user's data from the appliances table from the users table
+    user_row = db.execute('SELECT id FROM users WHERE username = ?',
+                          [username]).fetchone()
     user_id = user_row['id']
-    
-    user_app = db.execute('SELECT * FROM appliances WHERE user_id = ?', [user_id]).fetchone()
-    
-    if not user_app:
+    user_appliances = db.execute('SELECT * FROM appliances WHERE user_id = ?',
+                                 [user_id]).fetchone()
+
+    # grab all posts to be filtered and make a return variable
+    posts = db.execute('SELECT * FROM posts ORDER BY id DESC').fetchall()
+    filtered = []
+
+    # if the user does not have any stored appliances before filtering, redirect them to add some first
+    if not user_appliances:
         flash("Add your appliances first!")
         return redirect(url_for('my_profile'))
-    
-    all_posts = db.execute('SELECT * FROM posts ORDER BY id DESC').fetchall()
-    filtered = []
-    
-    for post in all_posts:
-        post_app = db.execute('SELECT * FROM appliances WHERE post_id = ?', [post['id']]).fetchone()
+
+    # begin filtering posts by appliances
+    for post in posts:
+        post_app = db.execute('SELECT * FROM appliances WHERE post_id = ?',
+                              [post['id']]).fetchone()
         
         if not post_app:
             filtered.append(post)
             continue
         
-        can_make = True
-        if post_app['stove'] and not user_app['stove']:
-            can_make = False
-        if post_app['oven'] and not user_app['oven']:
-            can_make = False
-        if post_app['microwave'] and not user_app['microwave']:
-            can_make = False
-        if post_app['blender'] and not user_app['blender']:
-            can_make = False
-        if post_app['toaster'] and not user_app['toaster']:
-            can_make = False
-        if post_app['air_fryer'] and not user_app['air_fryer']:
-            can_make = False
-        if post_app['slow_cooker'] and not user_app['slow_cooker']:
-            can_make = False
-        if post_app['pressure_cooker'] and not user_app['pressure_cooker']:
-            can_make = False
-        if post_app['grill'] and not user_app['grill']:
-            can_make = False
+        can_make = False
+        if post_app['stove'] and user_appliances['stove']:
+            can_make = True
+        if post_app['oven'] and user_appliances['oven']:
+            can_make = True
+        if post_app['microwave'] and user_appliances['microwave']:
+            can_make = True
+        if post_app['blender'] and user_appliances['blender']:
+            can_make = True
+        if post_app['toaster'] and user_appliances['toaster']:
+            can_make = True
+        if post_app['air_fryer'] and user_appliances['air_fryer']:
+            can_make = True
+        if post_app['slow_cooker'] and user_appliances['slow_cooker']:
+            can_make = True
+        if post_app['pressure_cooker'] and user_appliances['pressure_cooker']:
+            can_make = True
+        if post_app['grill'] and user_appliances['grill']:
+            can_make = True
         
         if can_make:
             filtered.append(post)
-    
-    friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ?', [user_id]).fetchall()
+
+    # pass all friends in to be viewed on the friends aside
+    friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ?',
+                         [user_id]).fetchall()
+
+    # return a render of template with specified posts and friends lists
     return render_template('main_feed.html', posts=filtered, suggested_friends=friends, filtered_by_appliances=True)
 
 
