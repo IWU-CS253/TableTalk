@@ -416,12 +416,13 @@ def edit_post():
     category = request.form['category']
     ingredients = request.form['ingredients']
     steps = request.form['steps']
+    appliances = request.form['appliances']
 
     db = get_db()
 
     # this has an un-needed (but helpful double-check) conditional to check the user owns the post before actually executing the edit on the post
-    db.execute("""UPDATE posts SET title = ?, category = ?, ingredients = ?, steps = ? WHERE id = ? AND username = ?""",
-               (title, category, ingredients, steps, post_id, session['username']))
+    db.execute("""UPDATE posts SET title = ?, category = ?, ingredients = ?, steps = ?, appliances = ? WHERE id = ? AND username = ?""",
+               (title, category, ingredients, steps, appliances, post_id, session['username']))
     db.commit()
     return redirect(url_for('show_feed'))
 
