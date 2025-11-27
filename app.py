@@ -348,35 +348,54 @@ def filter_by_appliances():
 
     # begin filtering posts by appliances
     for post in posts:
-        post_app = db.execute('SELECT * FROM appliances WHERE post_id = ?',
-                              [post['id']]).fetchone()
-        
-        if not post_app:
+        post_appliance_str = post['appliances']
+
+        # if no appliances is listed user can make the recipe
+        if not post_appliance_str or post_appliance_str == "No Appliances Listed":
             filtered.append(post)
             continue
-        
-        can_make = False
-        if post_app['stove'] and user_appliances['stove']:
-            can_make = True
-        if post_app['oven'] and user_appliances['oven']:
-            can_make = True
-        if post_app['microwave'] and user_appliances['microwave']:
-            can_make = True
-        if post_app['blender'] and user_appliances['blender']:
-            can_make = True
-        if post_app['toaster'] and user_appliances['toaster']:
-            can_make = True
-        if post_app['air_fryer'] and user_appliances['air_fryer']:
-            can_make = True
-        if post_app['slow_cooker'] and user_appliances['slow_cooker']:
-            can_make = True
-        if post_app['pressure_cooker'] and user_appliances['pressure_cooker']:
-            can_make = True
-        if post_app['grill'] and user_appliances['grill']:
-            can_make = True
-        
+
+        # Split the comma-separated string into a list
+        appliances_list = post_appliance_str.split(',')
+
+        # Strip whitespace and convert to lowercase for each appliance
+        needed = []
+        for a in appliances_list:
+            cleaned = a.strip().lower()
+            needed.append(cleaned)
+
+        can_make = True
+        for appliance_name in needed:
+            has_appliance = False
+            if 'stove' in appliance_name:
+                has_appliance = user_appliances['stove']
+            elif 'oven' in appliance_name:
+                has_appliance = user_appliances['oven']
+            elif 'microwave' in appliance_name:
+                has_appliance = user_appliances['microwave']
+            elif 'blender' in appliance_name:
+                has_appliance = user_appliances['blender']
+            elif 'toaster' in appliance_name:
+                has_appliance = user_appliances['toaster']
+            elif 'air fryer' in appliance_name or 'air_fryer' in appliance_name:
+                has_appliance = user_appliances['air_fryer']
+            elif 'slow cooker' in appliance_name or 'slow_cooker' in appliance_name:
+                has_appliance = user_appliances['slow_cooker']
+            elif 'pressure cooker' in appliance_name or 'pressure_cooker' in appliance_name:
+                has_appliance = user_appliances['pressure_cooker']
+            elif 'grill' in appliance_name:
+                has_appliance = user_appliances['grill']
+
+            if not has_appliance:
+                can_make = False
+                break
         if can_make:
             filtered.append(post)
+            
+            
+            
+            
+    
 
     # pass all friends in to be viewed on the friends aside
     friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ?',
