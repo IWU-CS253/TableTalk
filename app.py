@@ -146,7 +146,9 @@ def show_feed():
         username = session['username']
 
         # find user id using the session username
-        user_row = db.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone()
+        user_row = db.execute('SELECT id FROM users WHERE username = ?',
+                              (username,)).fetchone()
+
         if not user_row:
             flash("User not found in database", "error")
             return redirect(url_for('login'))
@@ -157,7 +159,8 @@ def show_feed():
         feed = db.execute('SELECT * FROM posts ORDER BY id DESC').fetchall()
 
         # get all users except the one logged into the current session
-        friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ? ORDER BY id DESC', (user_id,)).fetchall()
+        friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ? ORDER BY id DESC',
+                             (user_id,)).fetchall()
 
         return render_template('main_feed.html', posts=feed, suggested_friends=friends)
 
@@ -320,53 +323,85 @@ def tag_appliance():
 
 @app.route('/filter_by_appliances')
 def filter_by_appliances():
+    db = get_db()
+    username = session['username']
+
+    # make sure user is logged in check
     if 'username' not in session:
         return redirect(url_for('welcome_page'))
-    
-    db = get_db()
-    user_row = db.execute('SELECT id FROM users WHERE username = ?', [session['username']]).fetchone()
+
+    # get the user's data from the appliances table from the users table
+    user_row = db.execute('SELECT id FROM users WHERE username = ?',
+                          [username]).fetchone()
     user_id = user_row['id']
-    
-    user_app = db.execute('SELECT * FROM appliances WHERE user_id = ?', [user_id]).fetchone()
-    
-    if not user_app:
+    user_appliances = db.execute('SELECT * FROM appliances WHERE user_id = ?',
+                                 [user_id]).fetchone()
+
+    # grab all posts to be filtered and make a return variable
+    posts = db.execute('SELECT * FROM posts ORDER BY id DESC').fetchall()
+    filtered = []
+
+    # if the user does not have any stored appliances before filtering, redirect them to add some first
+    if not user_appliances:
         flash("Add your appliances first!")
         return redirect(url_for('my_profile'))
-    
-    all_posts = db.execute('SELECT * FROM posts ORDER BY id DESC').fetchall()
-    filtered = []
-    
-    for post in all_posts:
-        post_app = db.execute('SELECT * FROM appliances WHERE post_id = ?', [post['id']]).fetchone()
-        
-        if not post_app:
+
+    # begin filtering posts by appliances
+    for post in posts:
+        post_appliance_str = post['appliances']
+
+        # if no appliances is listed user can make the recipe
+        if not post_appliance_str or post_appliance_str == "No Appliances Listed":
             filtered.append(post)
             continue
-        
+
+        # Split the comma-separated string into a list
+        appliances_list = post_appliance_str.split(',')
+
+        # Strip whitespace and convert to lowercase for each appliance
+        needed = []
+        for a in appliances_list:
+            cleaned = a.strip().lower()
+            needed.append(cleaned)
+
         can_make = True
-        if post_app['stove'] and not user_app['stove']:
-            can_make = False
-        if post_app['oven'] and not user_app['oven']:
-            can_make = False
-        if post_app['microwave'] and not user_app['microwave']:
-            can_make = False
-        if post_app['blender'] and not user_app['blender']:
-            can_make = False
-        if post_app['toaster'] and not user_app['toaster']:
-            can_make = False
-        if post_app['air_fryer'] and not user_app['air_fryer']:
-            can_make = False
-        if post_app['slow_cooker'] and not user_app['slow_cooker']:
-            can_make = False
-        if post_app['pressure_cooker'] and not user_app['pressure_cooker']:
-            can_make = False
-        if post_app['grill'] and not user_app['grill']:
-            can_make = False
-        
+        for appliance_name in needed:
+            has_appliance = False
+            if 'stove' in appliance_name:
+                has_appliance = user_appliances['stove']
+            elif 'oven' in appliance_name:
+                has_appliance = user_appliances['oven']
+            elif 'microwave' in appliance_name:
+                has_appliance = user_appliances['microwave']
+            elif 'blender' in appliance_name:
+                has_appliance = user_appliances['blender']
+            elif 'toaster' in appliance_name:
+                has_appliance = user_appliances['toaster']
+            elif 'air fryer' in appliance_name or 'air_fryer' in appliance_name:
+                has_appliance = user_appliances['air_fryer']
+            elif 'slow cooker' in appliance_name or 'slow_cooker' in appliance_name:
+                has_appliance = user_appliances['slow_cooker']
+            elif 'pressure cooker' in appliance_name or 'pressure_cooker' in appliance_name:
+                has_appliance = user_appliances['pressure_cooker']
+            elif 'grill' in appliance_name:
+                has_appliance = user_appliances['grill']
+
+            if not has_appliance:
+                can_make = False
+                break
         if can_make:
             filtered.append(post)
+            
+            
+            
+            
     
-    friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ?', [user_id]).fetchall()
+
+    # pass all friends in to be viewed on the friends aside
+    friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ?',
+                         [user_id]).fetchall()
+
+    # return a render of template with specified posts and friends lists
     return render_template('main_feed.html', posts=filtered, suggested_friends=friends, filtered_by_appliances=True)
 
 
@@ -411,18 +446,25 @@ def delete_post(post_id):
 
 @app.route('/edit_post', methods=['POST'])
 def edit_post():
+    db = get_db()
+
+    # store the fields as easy to name variables
     post_id = request.form['id']
     title = request.form['title']
     category = request.form['category']
     ingredients = request.form['ingredients']
     steps = request.form['steps']
+    appliances = request.form.getlist('appliances')
 
-    db = get_db()
+    # make the list into a string so it can be stored in the database
+    appliances_str = ",".join(appliances)
 
     # this has an un-needed (but helpful double-check) conditional to check the user owns the post before actually executing the edit on the post
-    db.execute("""UPDATE posts SET title = ?, category = ?, ingredients = ?, steps = ? WHERE id = ? AND username = ?""",
-               (title, category, ingredients, steps, post_id, session['username']))
+    db.execute("""UPDATE posts SET title=?, category=?, ingredients=?, steps=?, appliances=? WHERE id=? AND username=?""",
+               (title, category, ingredients, steps, appliances_str, post_id, session['username']))
+
     db.commit()
+    flash("Post edited successfully", "info")
     return redirect(url_for('show_feed'))
 
 @app.route('/view_recipe/<int:recipe_id>', methods=['GET', 'POST'])
