@@ -27,6 +27,10 @@
               <li class="list-group-item">
                 <div class="d-flex justify-content-between align-items-center">
 
+            {% for post in posts %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <strong>{{ post.author }}</strong> ({{ post.category }})
                   <! Keep working on this>
                   <a href="{{ url_for('show_user_profile', username=friend.username) }}" class="text-success text-decoration-none">
                     <strong>{{ friend.first_name }} {{ friend.last_name }}</strong>
@@ -78,6 +82,8 @@
       </div>
       
       {% if filtered_by_appliances %}
+
+      <! Alert to show user they are viewing recepes only u can do with uru appliances>
       <div class="alert alert-info">
         Showing recipes you can make with your appliances. 
         <a href="{{ url_for('show_feed') }}">View all recipes</a>
