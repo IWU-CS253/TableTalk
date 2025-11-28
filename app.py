@@ -323,12 +323,12 @@ def tag_appliance():
 
 @app.route('/filter_by_appliances')
 def filter_by_appliances():
-    db = get_db()
-    username = session['username']
-
     # make sure user is logged in check
     if 'username' not in session:
         return redirect(url_for('welcome_page'))
+
+    db = get_db()
+    username = session['username']
 
     # get the user's data from the appliances table from the users table
     user_row = db.execute('SELECT id FROM users WHERE username = ?',
@@ -348,13 +348,13 @@ def filter_by_appliances():
 
     # begin filtering posts by appliances
     for post in posts:
-        post_app = db.execute('SELECT * FROM appliances WHERE post_id = ?',
-                              [post['id']]).fetchone()
-        
+        post_app = db.execute('SELECT appliances FROM posts WHERE post_id = ?',
+                              [posts['id']]).fetchone()
+
         if not post_app:
             filtered.append(post)
             continue
-        
+
         can_make = False
         if post_app['stove'] and user_appliances['stove']:
             can_make = True
@@ -374,7 +374,7 @@ def filter_by_appliances():
             can_make = True
         if post_app['grill'] and user_appliances['grill']:
             can_make = True
-        
+
         if can_make:
             filtered.append(post)
 
@@ -458,8 +458,9 @@ def view_recipe(recipe_id):
         flash("Recipe not found", "error")
         return redirect(url_for('show_feed'))
 
+
     ingredients = recipe['ingredients'].split('\n') if recipe['ingredients'] else []
-    instructions = recipe['steps'].split('\n') if recipe['steps'] else []
+    instructions = recipe['steps'].strip().split('\n') if recipe['steps'] else []
     appliances = recipe['appliances'].split('\n') if recipe['steps'] else []
     # optional for now must look deeper into
     comments = []
