@@ -1,81 +1,95 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<h2 class="mb-4 text-success" style="text-align: left"><strong>{{ recipe.title }}</strong></h2>
-<p>Cooked by <strong>{{ recipe.username }}</strong></p>
-    <main>
-        <article class="recipe-detail">
-            <! Editing out for right now because we are not enabling recipe images yet>
-            <!--<img src="https://via.placeholder.com/400x250" alt="Recipe image">-->
 
-            <! List all the ingredients>
-            <section class="ingredients">
-                <h3><strong>Ingredients</strong></h3>
-                <ul>
-                    {% if ingredients %}
-                    <ul>
-                        {% for ingredient in ingredients %}
-                            <li>{{ ingredient }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% else %}
-                        No Ingredients Listed
-                    {% endif %}
-                </ul>
-            </section>
+<main class="container">
+    <! Recipe header card section>
+    <div class="card mb-4 mt-4 mx-2">
+        <div class="card-body">
+            <h2 class="mb-2 text-success text-center"><strong>{{ recipe.title }}</strong></h2>
+            <p style="text-align:center">Cooked by <strong>{{ recipe.username }}</strong></p>
 
-            <! List all needed appliances>
-            <section class="appliances">
-                <h3><strong>Appliances Needed</strong></h3>
-                <ul>
-                    {% if appliances %}
-                    <ul>
-                        {% for appliance in appliances %}
-                            <li>{{ appliance }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% else %}
-                        No Appliances Listed
-                    {% endif %}
-                </ul>
-            </section>
+            <! Add cook it button>
+             <form method="POST" action="{{ url_for('add_to_cart', recipe_id=recipe.id) }}" class="text-center">
+                <button type="submit" class="btn btn-danger btn-md" style="font-size: 1.5rem;">Cook It!</button>
+             </form>
+        </div>
+    </div>
 
-            <! Recipe Instructions>
-            <section class="instructions">
-                <h3><strong>Instructions</strong></h3>
-                <ol>
+    <article class="recipe-detail">
+
+        <! Row for appliances and ingredients and appliances side by side>
+        <div class="row">
+            <! Ingredients section card>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header"><h3><strong>Ingredients</strong></h3></div>
+                    <div class="card-body">
+                        {% if ingredients %}
+                            <ul class="list-group list-group-flush">
+                                {% for ingredient in ingredients %}
+                                    <li class="list-group-item">{{ ingredient }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">No Ingredients Listed</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <! Appliances section card>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header"><h3><strong>Appliances Needed</strong></h3></div>
+                    <div class="card-body">
+                        {% if appliances %}
+                            <ul class="list-group list-group-flush">
+                                {% for appliance in appliances %}
+                                    <li class="list-group-item">{{ appliance }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">No Appliances Listed</p>
+                        {% endif %}
+                    </div>
+
+                    </div>
+                </div>
+            </div> <! end row div>
+
+        <! Instructions section card full width>
+        <div class="card mb-4 mx-2">
+            <div class="card-header"><h3><strong>Instructions</strong></h3></div>
+            <div class="card-body">
+                <ol class="list-group list-group-numbered">
                     {% for step in instructions %}
-                        <li>{{ step }}</li>
+                        <li class="list-group-item">{{ step }}</li>
                     {% endfor %}
                 </ol>
-            </section>
+            </div>
+        </div>
 
-            <! Comments Section >
-            <section class="comments">
-                <h3>Comments</h3>
+        <!Comments full width card (not yet implemented)>
+        <div class="card mb-4 mx-2">
+            <div class="card-header"><h3><strong>Comments</strong></h3></div>
+            <div class="card-body">
                 {% if comments %}
-                    <ul>
+                    <ul class="list-group list-group-flush">
                         {% for c in comments %}
-                            <li>{{ c }}</li>
+                            <li class="list-group-item">{{ c }}</li>
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p>No comments yet</p>
+                    <p class="text-muted">No comments yet</p>
                 {% endif %}
+            </div>
+        </div>
 
-                <!-- Comment form (optional: only enable if route exists) -->
-                {#
-                <form method="POST" action="{{ url_for('add_comment', recipe_id=recipe.id) }}">
-                    <label for="comment">Add a comment</label>
-                    <textarea id="comment" name="comment" placeholder="Add a comment..."></textarea>
-                    <button type="submit">Post Submit</button>
-                </form>
-                #}
-            </section>
-        </article>
-    </main>
+    </article>
+</main>
 
-    <footer>
-        <p>&copy; 2025 TableTalk</p>
-    </footer>
+<footer>
+    <p>&copy; 2025 TableTalk</p>
+</footer>
 {% endblock %}
