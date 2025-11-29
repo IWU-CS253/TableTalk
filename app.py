@@ -480,9 +480,9 @@ def view_recipe(recipe_id):
     ingredients = recipe['ingredients'].split('\n') if recipe['ingredients'] else []
     instructions = recipe['steps'].split('\n') if recipe['steps'] else []
     appliances = recipe['appliances'].split('\n') if recipe['steps'] else []
-    # optional for now must look deeper into
-    comments = []
+    
 
+    comments = db.execute("SELECT * FROM comments WHERE recipe_id = ? ORDER BY id DESC", (recipe_id,)).fetchall()
     return render_template('recipe_card.html', recipe=recipe, ingredients=ingredients, instructions=instructions, appliances=appliances, comments=comments)
 
 
@@ -582,7 +582,7 @@ def add_comment(recipe_id):
     db.execute('INSERT INTO comments (recipe_id, comment_text) VALUES (?,?)', (recipe_id, comment_text))
     db.commit()
 
-    return redirect(url_for('show_recipe_card', recipe_id = recipe_id))
+    return redirect(url_for('view_recipe', recipe_id = recipe_id))
 
 @app.route('/follow_user', methods=['POST'])
 def follow_user():

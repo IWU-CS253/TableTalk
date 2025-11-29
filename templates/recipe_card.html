@@ -6,7 +6,7 @@
         <nav>
             <a href="{{ url_for('show_feed') }}">Home</a>
             <a href="{{ url_for('show_feed') }}">All Recipes</a>
-            <a href="{{ url_for('profile', user_id=recipe.user_id) }}">Profile</a>
+            <a href="{{ url_for('my_profile')}}">Profile</a>
         </nav>
     </header>
 
@@ -42,23 +42,26 @@
             <section class="comments">
                 <h3>Comments</h3>
                 {% if comments %}
-                    <ul>
+                    <div class = "list-group mb-3"></div>
                         {% for c in comments %}
-                            <li>{{ c }}</li>
+                            <div class ="list-group-item">
+                                {{ c['comment_text'] }}
+                            </div>
                         {% endfor %}
-                    </ul>
+                    </div>
                 {% else %}
-                    <p>No comments yet</p>
+                    <p class="text-muted">No comments yet!</p>
                 {% endif %}
 
-                <!-- Comment form (optional: only enable if route exists) -->
-                {#
+                <!-- Comment form -->
                 <form method="POST" action="{{ url_for('add_comment', recipe_id=recipe.id) }}">
-                    <label for="comment">Add a comment</label>
-                    <textarea id="comment" name="comment" placeholder="Add a comment..."></textarea>
-                    <button type="submit">Post Submit</button>
+                    <div class="mb-3">
+                        <label for="comment" class="form_label">Add a comment</label>
+                        <textarea id="comment" name="comment" class="form-control" placeholder="Add a comment..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success">Post Submit</button>
+        
                 </form>
-                #}
             </section>
         </article>
     </main>
