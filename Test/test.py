@@ -48,14 +48,23 @@ def test_signup_users(client):
 
 def test_duplicate_username(client):
     """Testing to see what happens when you have duplicate usernames"""
+    client.post('/sign_up', data={"username":"repeat", "password":"a"})
+    response = client.post('/sign_up', data={"username":"repeat", "password":"a"})
 
+    assert b"already taken" in response.data.lower()
 
 # This is for feed test
 
 
 def test_if_feed_loads(client):
     """Test if the feed loads after loging in"""
+    #creates account
+    client.post('/sing_up', data={"username":"me", "password":"123"})
 
+    response = client.post('/show_feed', data={"username":"me", "password":"123"})
+
+    #should load feed text
+    assert b"post" in response.data.lower() or b"feed" in response.data.lower()
 
 # This test the post and comments
 
