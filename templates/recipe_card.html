@@ -45,7 +45,7 @@
                     <div class = "list-group mb-3"></div>
                         {% for c in comments %}
                             <div class ="list-group-item">
-                                {{ c['comment_text'] }}
+                                {{ c['username'] }}: {{ c['comment_text'] }}
                             </div>
                         {% endfor %}
                     </div>

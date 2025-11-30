@@ -576,10 +576,14 @@ def show_user_profile(username):
 
 @app.route('/add_comment/<int:recipe_id>', methods=['POST'])
 def add_comment(recipe_id):
+    if 'username' not in session:
+        flash("Please log in to add a comment", "error")
+        return redirect(url_for('welcome_page'))
     comment_text = request.form.get("comment")
+    username = session['username']
 
     db = get_db()
-    db.execute('INSERT INTO comments (recipe_id, comment_text) VALUES (?,?)', (recipe_id, comment_text))
+    db.execute('INSERT INTO comments (recipe_id, comment_text, username) VALUES (?,?,?)', (recipe_id, comment_text, username))
     db.commit()
 
     return redirect(url_for('view_recipe', recipe_id = recipe_id))
