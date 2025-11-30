@@ -29,13 +29,22 @@ def test_welcome_page(client):
 
 def test_invalid_logins(client):
     """Testing what happens when invalid logins are submitted"""
-
+    response = client.get("/")
+    assert b"login" in response.data.lower()
+    assert b"username" in response.data.lower()
 
 # This is for sign-up test
 
 
 def test_signup_users(client):
     """Test if new users make it to the database"""
+    client.post("/sign_up", data={"username" : "testuser", "password" : "testpass"})
+
+    #this should confirm the database change
+    with app.app_context():
+        db = get_db()
+        user = db.execute("SELECT * FROM accounts WHERE username = ?", ("testuser",)).fetchone()
+        assert user is not None
 
 def test_duplicate_username(client):
     """Testing to see what happens when you have duplicate usernames"""
