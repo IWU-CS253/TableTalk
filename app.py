@@ -481,9 +481,9 @@ def view_recipe(recipe_id):
     ingredients = recipe['ingredients'].split('\n') if recipe['ingredients'] else []
     instructions = recipe['steps'].strip().split('\n') if recipe['steps'] else []
     appliances = recipe['appliances'].split('\n') if recipe['steps'] else []
-    # optional for now must look deeper into
-    comments = []
+    
 
+    comments = db.execute("SELECT * FROM comments WHERE recipe_id = ? ORDER BY id DESC", (recipe_id,)).fetchall()
     return render_template('recipe_card.html', recipe=recipe, ingredients=ingredients, instructions=instructions, appliances=appliances, comments=comments)
 
 
@@ -577,13 +577,17 @@ def show_user_profile(username):
 
 @app.route('/add_comment/<int:recipe_id>', methods=['POST'])
 def add_comment(recipe_id):
+    if 'username' not in session:
+        flash("Please log in to add a comment", "error")
+        return redirect(url_for('welcome_page'))
     comment_text = request.form.get("comment")
+    username = session['username']
 
     db = get_db()
-    db.execute('INSERT INTO comments (recipe_id, comment_text) VALUES (?,?)', (recipe_id, comment_text))
+    db.execute('INSERT INTO comments (recipe_id, comment_text, username) VALUES (?,?,?)', (recipe_id, comment_text, username))
     db.commit()
 
-    return redirect(url_for('show_recipe_card', recipe_id = recipe_id))
+    return redirect(url_for('view_recipe', recipe_id = recipe_id))
 
 @app.route('/follow_user', methods=['POST'])
 def follow_user():

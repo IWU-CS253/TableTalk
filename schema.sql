@@ -39,3 +39,11 @@ CREATE TABLE appliances
     pressure_cooker BOOLEAN,
     grill BOOLEAN
 );
+
+Create Table comments
+(   
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipe_id INTEGER NOT NULL,
+    comment_text TEXT NOT NULL,
+    FOREIGN KEY (recipe_id) REFERENCES posts(id)
+);

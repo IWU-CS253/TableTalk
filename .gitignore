@@ -3,4 +3,6 @@ myenv/
 
 # Python cache
 __pycache__/
-*.pyc
+*.pyctabletalk.db
+tabletalk.db
+tabletalk.db
