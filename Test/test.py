@@ -71,13 +71,49 @@ def test_if_feed_loads(client):
 
 def test_insert_post(client):
     """This test verifies if the post properly inserts into the feed"""
+    with app.app_context():
+        db = get_db()
+        db.execute("INSERT INTO posts (title,userid) VALUES (?,?)", ("Test Post", 1))
+        db.commit()
+
+        response = client.get("/show_feed")
+
+        #Feed should have/contain certain post
+        assert b"post" in response.data.lower()
 
 def add_comment(client):
     """This test adding to comments to existing post"""
 
+    #create post first
+    with app.app_context():
+        db = get_db()
+        db.execute("INSERT INTO posts (title, userid) VALUES (?,?)", ("Another Post",1))
+        db.commit()
+
+        #adding a comment
+        client.post('/add_comment/1', data= {"comment":"Nice recipe!"})
+
+        with app.app_context():
+            db = get_db()
+            comment = db.execute("SELECT * FROM comments WHERE post_id = ?", (1,)).fetchone()
+
+            assert comment is not None
+            assert comment["comment_text"] == "Nice recipe!"
 
 # This test everything with the ingredients
 
 
 def add_ingredient(client):
     """Testing to see if the ingredients table exist and that the user can insert into it"""
+    with app.app_context():
+        db = get_db()
+        db.execute("INSERT INTO ingredients (post_id, ingredient, measurement) VALUES (?,?,?)", (1,"Sugar", "1 cup"))
+        db.commit()
+
+        row = db.execute("SELECT * FROM ingredients WHERE post_id = ?", (1)).fetchone()
+
+        assert row is not None
+        assert row["ingredient"].lower() == "sugar"
+
+
+
