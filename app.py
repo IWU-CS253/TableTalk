@@ -323,12 +323,12 @@ def tag_appliance():
 
 @app.route('/filter_by_appliances')
 def filter_by_appliances():
-    db = get_db()
-    username = session['username']
-
     # make sure user is logged in check
     if 'username' not in session:
         return redirect(url_for('welcome_page'))
+
+    db = get_db()
+    username = session['username']
 
     # get the user's data from the appliances table from the users table
     user_row = db.execute('SELECT id FROM users WHERE username = ?',
@@ -477,8 +477,9 @@ def view_recipe(recipe_id):
         flash("Recipe not found", "error")
         return redirect(url_for('show_feed'))
 
+
     ingredients = recipe['ingredients'].split('\n') if recipe['ingredients'] else []
-    instructions = recipe['steps'].split('\n') if recipe['steps'] else []
+    instructions = recipe['steps'].strip().split('\n') if recipe['steps'] else []
     appliances = recipe['appliances'].split('\n') if recipe['steps'] else []
     
 
