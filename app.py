@@ -391,11 +391,6 @@ def filter_by_appliances():
                 break
         if can_make:
             filtered.append(post)
-            
-            
-            
-            
-    
 
     # pass all friends in to be viewed on the friends aside
     friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ?',
