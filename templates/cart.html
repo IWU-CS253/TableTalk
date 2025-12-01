@@ -1,9 +1,11 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="col-md-8">
-    <h2 class="text-success mb-1"><strong>My Cart</strong></h2>
-    <p class="mb-0"><strong>{{ session["username"] }}</strong></p>
+<div class="card mb-4 mt-4 mx-2">
+        <div class="card-body">
+            <h2 class="mb-2 text-success text-center"><strong>My Cart</strong></h2>
+            <p style="text-align:center"><strong>{{ session["username"] }}</strong></p>
+        </div>
 </div>
 
 <! Section to flash bootstrap alerts>

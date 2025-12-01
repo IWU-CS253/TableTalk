@@ -575,6 +575,7 @@ def show_user_profile(username):
         flash("User does not exist", "error")
         return redirect(url_for('show_feed'))
 
+
 @app.route('/add_comment/<int:recipe_id>', methods=['POST'])
 def add_comment(recipe_id):
     if 'username' not in session:
@@ -588,6 +589,52 @@ def add_comment(recipe_id):
     db.commit()
 
     return redirect(url_for('view_recipe', recipe_id = recipe_id))
+
+
+@app.route('/delete_comment/<int:comment_id>', methods=['POST'])
+def delete_comment(comment_id):
+    db = get_db()
+    comment = db.execute("SELECT * FROM comments WHERE id = ?", (comment_id,)).fetchone()
+
+    # safety check that the comment exists
+    if comment is None:
+        flash("Comment not found.", "error")
+        return redirect(url_for('welcome_page'))
+
+    # double-check the user actually owns the comment
+    if 'username' not in session or session['username'] != comment['username']:
+        flash("You can only delete your own comments.", "error")
+        return redirect(url_for('view_recipe', recipe_id=comment['recipe_id']))
+
+    # passes all safety checks: delete comment
+    db.execute("DELETE FROM comments WHERE id = ?", (comment_id,))
+    db.commit()
+    flash("Comment deleted successfully!", "success")
+    return redirect(url_for('view_recipe', recipe_id=comment['recipe_id']))
+
+
+@app.route('/edit_comment/<int:comment_id>', methods=['POST'])
+def edit_comment(comment_id):
+    db = get_db()
+    comment = db.execute("SELECT * FROM comments WHERE id = ?", (comment_id,)).fetchone()
+
+    # double-check that the comment exists
+    if comment is None:
+        flash("Comment not found", "error")
+        return redirect(url_for('welcome_page'))
+
+    # safety check that the user owns the comment before allowing editing abilities
+    if 'username' not in session or session['username'] != comment['username']:
+        flash("You can only edit your own comments.", "error")
+        return redirect(url_for('view_recipe', recipe_id=comment['recipe_id']))
+
+
+    edited_comment = request.form.get("comment")
+    db.execute("UPDATE comments SET comment_text = ? WHERE id = ?", (edited_comment, comment_id))
+    db.commit()
+    flash("Comment updated successfully!", "success")
+    return redirect(url_for('view_recipe', recipe_id=comment['recipe_id']))
+
 
 @app.route('/follow_user', methods=['POST'])
 def follow_user():
