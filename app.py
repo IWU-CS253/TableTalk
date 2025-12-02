@@ -384,13 +384,24 @@ def add_comment(recipe_id):
 def follow_user():
     if 'username' in session and 'username' in request.form:
         db = get_db()
-        cur = db.execute("SELECT following FROM users WHERE username = ?",
-                              session['username'])
-        old_list = cur.fetchone()
-        new_list = old_list.split('|').append(request.form['username'])
-        new_text = new_list.join('|')
-        db.execute('UPDATE users SET following = new_text WHERE username = ?', session['username'])
-        return redirect(url_for('show_feed'))
+        cur = db.execute("SELECT following FROM users WHERE username = ?", (session['username'],))
+        row = cur.fetchone()
+        if row is None:
+            flash("Failed to follow user")
+            print_flashes()
+            return redirect(url_for('show_feed'))
+        else:
+            old_list = row[0]
+            if old_list:
+                new_list = old_list.split('|')
+            else:
+                new_list = []
+            if request.form['username'] not in new_list:
+                new_list.append(request.form['username'])
+            new_text = '|'.join(new_list)
+            db.execute('UPDATE users SET following = ? WHERE username = ?', (new_text, session['username']))
+            db.commit()
+            return redirect(url_for('show_feed'))
     else:
         flash("Failed to follow user")
         print_flashes()
