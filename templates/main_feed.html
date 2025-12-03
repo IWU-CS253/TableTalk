@@ -32,8 +32,12 @@
                     <strong>{{ friend.first_name }} {{ friend.last_name }}</strong>
                   </a>
 
-                  <! This does not do anything yet>
-                  <button class="btn btn-outline-success">Add Friend</button>
+
+                  <form method="POST" action="{{ url_for('follow_user') }}" class="m-0">
+                    <input type="hidden" name="username" value="{{ friend.username }}">
+                    <button type="submit" class="btn btn-outline-success">Add Friend</button>
+                  </form>
+
                 </div>
                 <div class="ms-4" style="text-align: left">@{{ friend.username }}</div>
                 <div class="ms-4"style="text-align: left">My favorite food is: {{ friend.favorite_food }}</div>
