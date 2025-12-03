@@ -7,7 +7,7 @@ CREATE TABLE users (
     last_name TEXT NOT NULL,
     favorite_food TEXT NOT NULL,
     cart TEXT,
-    following TEXT,
+    following TEXT
 );
 
 DROP TABLE IF EXISTS posts;
