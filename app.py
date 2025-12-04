@@ -478,7 +478,8 @@ def view_recipe(recipe_id):
     appliances = recipe['appliances'].split('\n') if recipe['steps'] else []
     
 
-    comments = db.execute("SELECT * FROM comments WHERE recipe_id = ? ORDER BY id DESC", (recipe_id,)).fetchall()
+    comments = db.execute("SELECT * FROM comments WHERE recipe_id = ? ORDER BY id DESC",
+                          (recipe_id,)).fetchall()
     return render_template('recipe_card.html', recipe=recipe, ingredients=ingredients, instructions=instructions, appliances=appliances, comments=comments)
 
 
