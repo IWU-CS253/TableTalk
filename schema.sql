@@ -43,8 +43,8 @@ CREATE TABLE appliances
 Create Table comments
 (   
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    post_id INTEGER NOT NULL,
+    recipe_id INTEGER NOT NULL,
     comment_text TEXT NOT NULL,
     username TEXT NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(id)
+    FOREIGN KEY (recipe_id) REFERENCES posts(id)
 );
