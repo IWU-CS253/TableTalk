@@ -24,7 +24,7 @@
 
           <! Display all friends which are not the current user logged in>
           {% for friend in suggested_friends %}
-              <li class="list-group-item">
+              <div class="list-group-item">
                 <div class="d-flex justify-content-between align-items-center">
 
                   <! Keep working on this>
@@ -32,14 +32,17 @@
                     <strong>{{ friend.first_name }} {{ friend.last_name }}</strong>
                   </a>
 
-                  <! This does not do anything yet>
-                  <button class="btn btn-outline-success">Add Friend</button>
+
+                  <form method="POST" action="{{ url_for('follow_user') }}" class="m-0">
+                    <input type="hidden" name="username" value="{{ friend.username }}">
+                    <button type="submit" class="btn btn-outline-success">Add Friend</button>
+                  </form>
+
                 </div>
                 <div class="ms-4" style="text-align: left">@{{ friend.username }}</div>
                 <div class="ms-4"style="text-align: left">My favorite food is: {{ friend.favorite_food }}</div>
-              </li>
+              </div>
           {% endfor %}
-      </ul>
       </ul>
     </div>
 
@@ -79,7 +82,7 @@
       
       {% if filtered_by_appliances %}
 
-      <! Alert to show user they are viewing recepes only u can do with uru appliances>
+      <! Alert to show user they are viewing recipies only u can do with your appliances>
       <div class="alert alert-info">
         Showing recipes you can make with your appliances. 
         <a href="{{ url_for('show_feed') }}">View all recipes</a>
@@ -101,7 +104,6 @@
           </div>
           <div class="mb-2"><strong>Category:</strong> {{ post.category }}</div>
           <! Choosing not to display the steps on the main feed page because this allows more posts to be seen at once, and entices users to click into the recipe>
-
           <! Display all the Ingredients>
           <p><strong>Ingredients:</strong></p>
           <ul class="list-group mb-3">
@@ -339,7 +341,6 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </div>

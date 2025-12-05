@@ -1,14 +1,5 @@
 {% extends "layout.html" %}
 {% block content %}
-    <header>
-        <h1>TableTalk</h1>
-        <nav>
-            <a href="{{ url_for('show_feed') }}">Feed</a>
-            <a href="{{ url_for('show_cart') }}">Cart</a>
-            <a href="{{ url_for('my_profile') }}">My Profile</a>
-            <a href="{{ url_for('logout') }}">Log Out</a>
-        </nav>
-    </header>
 
     <! Section to flash bootstrap alerts>
     {% with messages = get_flashed_messages(with_categories=true) %}

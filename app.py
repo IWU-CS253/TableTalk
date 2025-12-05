@@ -323,12 +323,12 @@ def tag_appliance():
 
 @app.route('/filter_by_appliances')
 def filter_by_appliances():
-    db = get_db()
-    username = session['username']
-
     # make sure user is logged in check
     if 'username' not in session:
         return redirect(url_for('welcome_page'))
+
+    db = get_db()
+    username = session['username']
 
     # get the user's data from the appliances table from the users table
     user_row = db.execute('SELECT id FROM users WHERE username = ?',
@@ -391,11 +391,6 @@ def filter_by_appliances():
                 break
         if can_make:
             filtered.append(post)
-            
-            
-            
-            
-    
 
     # pass all friends in to be viewed on the friends aside
     friends = db.execute('SELECT first_name, last_name, username, favorite_food FROM users WHERE id != ?',
@@ -477,12 +472,14 @@ def view_recipe(recipe_id):
         flash("Recipe not found", "error")
         return redirect(url_for('show_feed'))
 
+
     ingredients = recipe['ingredients'].split('\n') if recipe['ingredients'] else []
-    instructions = recipe['steps'].split('\n') if recipe['steps'] else []
+    instructions = recipe['steps'].strip().split('\n') if recipe['steps'] else []
     appliances = recipe['appliances'].split('\n') if recipe['steps'] else []
     
 
-    comments = db.execute("SELECT * FROM comments WHERE recipe_id = ? ORDER BY id DESC", (recipe_id,)).fetchall()
+    comments = db.execute("SELECT * FROM comments WHERE recipe_id = ? ORDER BY id DESC",
+                          (recipe_id,)).fetchall()
     return render_template('recipe_card.html', recipe=recipe, ingredients=ingredients, instructions=instructions, appliances=appliances, comments=comments)
 
 
@@ -574,6 +571,7 @@ def show_user_profile(username):
         flash("User does not exist", "error")
         return redirect(url_for('show_feed'))
 
+
 @app.route('/add_comment/<int:recipe_id>', methods=['POST'])
 def add_comment(recipe_id):
     if 'username' not in session:
@@ -588,17 +586,74 @@ def add_comment(recipe_id):
 
     return redirect(url_for('view_recipe', recipe_id = recipe_id))
 
+
+@app.route('/delete_comment/<int:comment_id>', methods=['POST'])
+def delete_comment(comment_id):
+    db = get_db()
+    comment = db.execute("SELECT * FROM comments WHERE id = ?", (comment_id,)).fetchone()
+
+    # safety check that the comment exists
+    if comment is None:
+        flash("Comment not found.", "error")
+        return redirect(url_for('welcome_page'))
+
+    # double-check the user actually owns the comment
+    if 'username' not in session or session['username'] != comment['username']:
+        flash("You can only delete your own comments.", "error")
+        return redirect(url_for('view_recipe', recipe_id=comment['recipe_id']))
+
+    # passes all safety checks: delete comment
+    db.execute("DELETE FROM comments WHERE id = ?", (comment_id,))
+    db.commit()
+    flash("Comment deleted successfully!", "success")
+    return redirect(url_for('view_recipe', recipe_id=comment['recipe_id']))
+
+
+@app.route('/edit_comment/<int:comment_id>', methods=['POST'])
+def edit_comment(comment_id):
+    db = get_db()
+    comment = db.execute("SELECT * FROM comments WHERE id = ?", (comment_id,)).fetchone()
+
+    # double-check that the comment exists
+    if comment is None:
+        flash("Comment not found", "error")
+        return redirect(url_for('welcome_page'))
+
+    # safety check that the user owns the comment before allowing editing abilities
+    if 'username' not in session or session['username'] != comment['username']:
+        flash("You can only edit your own comments.", "error")
+        return redirect(url_for('view_recipe', recipe_id=comment['recipe_id']))
+
+
+    edited_comment = request.form.get("comment")
+    db.execute("UPDATE comments SET comment_text = ? WHERE id = ?", (edited_comment, comment_id))
+    db.commit()
+    flash("Comment updated successfully!", "success")
+    return redirect(url_for('view_recipe', recipe_id=comment['recipe_id']))
+
+
 @app.route('/follow_user', methods=['POST'])
 def follow_user():
     if 'username' in session and 'username' in request.form:
         db = get_db()
-        cur = db.execute("SELECT following FROM users WHERE username = ?",
-                              session['username'])
-        old_list = cur.fetchone()
-        new_list = old_list.split('|').append(request.form['username'])
-        new_text = new_list.join('|')
-        db.execute('UPDATE users SET following = new_text WHERE username = ?', session['username'])
-        return redirect(url_for('show_feed'))
+        cur = db.execute("SELECT following FROM users WHERE username = ?", (session['username'],))
+        row = cur.fetchone()
+        if row is None:
+            flash("Failed to follow user")
+            print_flashes()
+            return redirect(url_for('show_feed'))
+        else:
+            old_list = row[0]
+            if old_list:
+                new_list = old_list.split('|')
+            else:
+                new_list = []
+            if request.form['username'] not in new_list:
+                new_list.append(request.form['username'])
+            new_text = '|'.join(new_list)
+            db.execute('UPDATE users SET following = ? WHERE username = ?', (new_text, session['username']))
+            db.commit()
+            return redirect(url_for('show_feed'))
     else:
         flash("Failed to follow user")
         print_flashes()

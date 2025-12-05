@@ -1,72 +1,154 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <header>
-        <h1>TableTalk</h1>
-        <nav>
-            <a href="{{ url_for('show_feed') }}">Home</a>
-            <a href="{{ url_for('show_feed') }}">All Recipes</a>
-            <a href="{{ url_for('my_profile')}}">Profile</a>
-        </nav>
-    </header>
 
-    <main>
-        <article class="recipe-detail">
-            <h2>{{ recipe.title }}</h2>
-            <p>By <strong>{{ recipe.username }}</strong></p>
+<main class="container">
+    <! Recipe header card section>
+    <div class="card mb-4 mt-4 mx-2">
+        <div class="card-body">
+            <h2 class="mb-2 text-success text-center"><strong>{{ recipe.title }}</strong></h2>
+            <p style="text-align:center">Cooked by <strong>{{ recipe.username }}</strong></p>
 
-            <img src="https://via.placeholder.com/400x250" alt="Recipe image">
+            <! Add cook it button>
+             <form method="POST" action="{{ url_for('add_to_cart', recipe_id=recipe.id) }}" class="text-center">
+                <button type="submit" class="btn btn-danger btn-md" style="font-size: 1.5rem;">Cook It!</button>
+             </form>
+        </div>
+    </div>
 
-            <!-- Ingredients section -->
-            <section class="ingredients">
-                <h3>Ingredients</h3>
-                <ul>
-                    {% for ingredient in ingredients %}
-                        <li>{{ ingredient }}</li>
-                    {% endfor %}
-                </ul>
-            </section>
+    <article class="recipe-detail">
 
-            <!-- Instructions section -->
-            <section class="instructions">
-                <h3>Instructions</h3>
-                <ol>
+        <! Row for appliances and ingredients and appliances side by side>
+        <div class="row">
+            <! Ingredients section card>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header"><h3><strong>Ingredients</strong></h3></div>
+                    <div class="card-body">
+                        {% if ingredients %}
+                            <ul class="list-group list-group-flush">
+                                {% for ingredient in ingredients %}
+                                    <li class="list-group-item">{{ ingredient }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">No Ingredients Listed</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <! Appliances section card>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header"><h3><strong>Appliances Needed</strong></h3></div>
+                    <div class="card-body">
+                        {% if appliances %}
+                            <ul class="list-group list-group-flush">
+                                {% for appliance in appliances %}
+                                    <li class="list-group-item">{{ appliance }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">No Appliances Listed</p>
+                        {% endif %}
+                    </div>
+
+                    </div>
+                </div>
+            </div> <! end row div>
+
+        <! Instructions section card full width>
+        <div class="card mb-4 mx-2">
+            <div class="card-header"><h3><strong>Instructions</strong></h3></div>
+            <div class="card-body">
+                <ol class="list-group list-group-numbered">
                     {% for step in instructions %}
-                        <li>{{ step }}</li>
+                        <li class="list-group-item">{{ step }}</li>
                     {% endfor %}
                 </ol>
-            </section>
-            
+            </div>
+        </div>
 
-            <!-- Comments section -->
-            <section class="comments">
-                <h3>Comments</h3>
+        <!Comments full width card (not yet implemented)>
+        <div class="card mb-4 mx-2">
+            <div class="card-header"><h3><strong>Comments</strong></h3></div>
+            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addCommentModal">Add a Comment</button>
+
+            <! Display recipe comments>
+            <div class="card-body">
                 {% if comments %}
-                    <div class = "list-group mb-3"></div>
-                        {% for c in comments %}
-                            <div class ="list-group-item">
-                                {{ c['username'] }}: {{ c['comment_text'] }}
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-muted">No comments yet!</p>
-                {% endif %}
+                    <div class="list-group mb-3">
+                    {% for c in comments %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ c['username'] }}: {{ c['comment_text'] }}</span>
 
-                <!-- Comment form -->
-                <form method="POST" action="{{ url_for('add_comment', recipe_id=recipe.id) }}">
-                    <div class="mb-3">
-                        <label for="comment" class="form_label">Add a comment</label>
-                        <textarea id="comment" name="comment" class="form-control" placeholder="Add a comment..."></textarea>
+                      {% if session['username'] == c['username'] %}
+                        <div>
+                          <! edit trigger the modal>
+                          <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editCommentModal{{ c['id'] }}">Edit</button>
+
+                          <! delete comment form button>
+                          <form method="POST" action="{{ url_for('delete_comment', comment_id=c['id']) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                          </form>
+                        </div>
+                      {% endif %}
                     </div>
-                    <button type="submit" class="btn btn-success">Post Submit</button>
-        
-                </form>
-            </section>
+
+                    <! edit modal available>
+                    <div class="modal fade" id="editCommentModal{{ c['id'] }}" tabindex="-1" aria-labelledby="editCommentModalLabel{{ c['id'] }}" aria-hidden="true">
+                      <div class="modal-dialog">
+                        <div class="modal-content">
+                          <form method="POST" action="{{ url_for('edit_comment', comment_id=c['id']) }}">
+                            <div class="modal-header">
+                              <h5 class="modal-title" id="editCommentModalLabel{{ c['id'] }}">Edit Comment</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                              <textarea name="comment" class="form-control">{{ c['comment_text'] }}</textarea>
+                            </div>
+                            <div class="modal-footer">
+                              <button type="submit" class="btn btn-success">Save Changes</button>
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p class="text-muted">No comments yet!</p>
+              {% endif %}
+            </div>
+
+
+            <div class="modal fade" id="addCommentModal" tabindex="-1" aria-labelledby="addCommentModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="POST" action="{{ url_for('add_comment', recipe_id=recipe.id) }}">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="addCommentModalLabel">Add a Comment</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <textarea id="comment" name="comment" class="form-control" placeholder="Type your comment here..."></textarea>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="submit" class="btn btn-success">Submit</button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
         </article>
     </main>
 
-    <footer>
-        <p>&copy; 2025 TableTalk</p>
-    </footer>
+<footer>
+    <p>&copy; 2025 TableTalk</p>
+</footer>
 {% endblock %}
