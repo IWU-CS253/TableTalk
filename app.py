@@ -200,7 +200,7 @@ def filter_posts():
         return render_template('login.html')
 
 
-@app.route('/user_profile', methods=['POST'])
+@app.route('/user_profile', methods=['GET', 'POST'])
 def show_profile():
     if "username" in request.form:
         db = get_db()
