@@ -6,7 +6,7 @@
         <nav>
             <a href="{{ url_for('show_feed') }}">Home</a>
             <a href="{{ url_for('show_feed') }}">All Recipes</a>
-            <a href="{{ url_for('profile', user_id=recipe.user_id) }}">Profile</a>
+            <a href="{{ url_for('show_profile', user_id=recipe.user_id) }}">Profile</a>
         </nav>
     </header>
 
