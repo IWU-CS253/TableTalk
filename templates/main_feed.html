@@ -24,7 +24,7 @@
 
           <! Display all friends which are not the current user logged in>
           {% for friend in suggested_friends %}
-              <div class="list-group-item">
+              <li class="list-group-item">
                 <div class="d-flex justify-content-between align-items-center">
 
                   <! Keep working on this>
@@ -32,17 +32,14 @@
                     <strong>{{ friend.first_name }} {{ friend.last_name }}</strong>
                   </a>
 
-
-                  <form method="POST" action="{{ url_for('follow_user') }}" class="m-0">
-                    <input type="hidden" name="username" value="{{ friend.username }}">
-                    <button type="submit" class="btn btn-outline-success">Add Friend</button>
-                  </form>
-
+                  <! This does not do anything yet>
+                  <button class="btn btn-outline-success">Add Friend</button>
                 </div>
                 <div class="ms-4" style="text-align: left">@{{ friend.username }}</div>
                 <div class="ms-4"style="text-align: left">My favorite food is: {{ friend.favorite_food }}</div>
-              </div>
+              </li>
           {% endfor %}
+      </ul>
       </ul>
     </div>
 
@@ -82,7 +79,7 @@
       
       {% if filtered_by_appliances %}
 
-      <! Alert to show user they are viewing recipies only u can do with your appliances>
+      <! Alert to show user they are viewing recepes only u can do with uru appliances>
       <div class="alert alert-info">
         Showing recipes you can make with your appliances. 
         <a href="{{ url_for('show_feed') }}">View all recipes</a>
@@ -99,11 +96,14 @@
         <div class="card-body">
           <! Div with a button to the right side so the user can click and see the recipe more fully>
           <div class="d-flex justify-content-between align-items-center">
-              <h5 class="card-title text-success fw-bold mb-0">{{ post.title }}</h5>
+
+              <!Added text overflow css styling>
+              <h5 class="card-title text-success fw-bold mb-0" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 70%;">{{ post.title }}</h5>
               <a href="{{ url_for('view_recipe', recipe_id=post.id) }}" class="btn btn-outline-success btn-sm">View Recipe</a>
           </div>
           <div class="mb-2"><strong>Category:</strong> {{ post.category }}</div>
           <! Choosing not to display the steps on the main feed page because this allows more posts to be seen at once, and entices users to click into the recipe>
+
           <! Display all the Ingredients>
           <p><strong>Ingredients:</strong></p>
           <ul class="list-group mb-3">
@@ -163,14 +163,14 @@
                 <! Users insert their own recipe title>
                 <div class="mb-3">
                   <label for="recipeTitle" class="form-label">Title</label>
-                  <input type="text" class="form-control" id="recipeTitle" name="title" required>
+                  <input type="text" class="form-control" id="recipeTitle" name="title" maxlength="100" required>
                 </div>
 
                 <! Enable labeling to later filter posts by>
                 <div class="mb-3">
                   <label for="recipeCategory" class="form-label">Category</label>
                   <select class="form-select" id="recipeCategory" name="recipe_category" data-role="label" required>
-                    <option selected disabled>Select a category</option>
+                    <option selected disabled value="">Select a category</option>
                     <option>American</option>
                     <option>Chinese</option>
                     <option>Greek</option>
@@ -186,37 +186,48 @@
                   <! Insert ingredients>
                 <div class="mb-3">
                   <label for="recipeIngredients" class="form-label">Ingredients & Measurements</label>
-                  <textarea class="form-control" id="recipeIngredients" name="ingredients" rows="3" required></textarea>
+                  <textarea class="form-control" id="recipeIngredients" name="ingredients" rows="3" maxlength="200" required></textarea>
                 </div>
 
                   <! Insert Steps>
                 <div class="mb-3">
                   <label for="recipeSteps" class="form-label">Steps</label>
-                  <textarea class="form-control" id="recipeSteps" name="steps" rows="5" required></textarea>
+                  <textarea class="form-control" id="recipeSteps" name="steps" rows="5" maxlength="1000" required></textarea>
                 </div>
 
                 <! Insert Appliances>
                 <div class="mb-3">
                     <label class="form-label">Appliances Needed</label>
                     <div class="btn-group flex-wrap" role="group" aria-label="Appliances">
+
+                      <input type="checkbox" class="btn-check" id="stove" name="appliances" value="Stove">
                       <label class="btn btn-outline-success m-1" for="stove">Stove</label>
-                        <input type="checkbox" class="btn-check" id="stove" name="appliances" value="Stove">
+                      
+                      <input type="checkbox" class="btn-check" id="oven" name="appliances" value="Oven">
                       <label class="btn btn-outline-success m-1" for="oven">Oven</label>
-                        <input type="checkbox" class="btn-check" id="oven" name="appliances" value="Oven">
+                        
+                      <input type="checkbox" class="btn-check" id="microwave" name="appliances" value="Microwave">
                       <label class="btn btn-outline-success m-1" for="microwave">Microwave</label>
-                        <input type="checkbox" class="btn-check" id="microwave" name="appliances" value="Microwave">
+
+                     
+                      <input type="checkbox" class="btn-check" id="blender" name="appliances" value="Blender">
                       <label class="btn btn-outline-success m-1" for="blender">Blender</label>
-                        <input type="checkbox" class="btn-check" id="blender" name="appliances" value="Blender">
+                      
+                      <input type="checkbox" class="btn-check" id="toaster" name="appliances" value="Toaster">
                       <label class="btn btn-outline-success m-1" for="toaster">Toaster</label>
-                        <input type="checkbox" class="btn-check" id="toaster" name="appliances" value="Toaster">
+                      
+                      <input type="checkbox" class="btn-check" id="air_fryer" name="appliances" value="Air Fryer">
                       <label class="btn btn-outline-success m-1" for="air_fryer">Air Fryer</label>
-                        <input type="checkbox" class="btn-check" id="air_fryer" name="appliances" value="Air Fryer">
+                      
+                      <input type="checkbox" class="btn-check" id="slow_cooker" name="appliances" value="Slow Cooker">
                       <label class="btn btn-outline-success m-1" for="slow_cooker">Slow Cooker</label>
-                        <input type="checkbox" class="btn-check" id="slow_cooker" name="appliances" value="Slow Cooker">
+                      
+                      <input type="checkbox" class="btn-check" id="pressure_cooker" name="appliances" value="Pressure Cooker">
                       <label class="btn btn-outline-success m-1" for="pressure_cooker">Pressure Cooker</label>
-                        <input type="checkbox" class="btn-check" id="pressure_cooker" name="appliances" value="Pressure Cooker">
+                      
+                      <input type="checkbox" class="btn-check" id="grill" name="appliances" value="Grill">
                       <label class="btn btn-outline-success m-1" for="grill">Grill</label>
-                        <input type="checkbox" class="btn-check" id="grill" name="appliances" value="Grill">
+                      
                     </div>
                 </div>
               </div>
@@ -330,6 +341,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </div>
