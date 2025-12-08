@@ -36,3 +36,10 @@ body {
 .icon {
     margin-right: 5px;
 }
+.logo-link {
+    text-decoration: none;
+    color: inherit;
+}
+.logo-link:hover {
+    opacity: inherit;
+}
