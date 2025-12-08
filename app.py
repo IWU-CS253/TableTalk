@@ -430,7 +430,7 @@ def submit_recipe():
         flash("Please log in to submit a recipe", "error")
         return redirect(url_for('login'))
 
-@app.route('/delete_post/<int:post_id>', methods=['GET', 'POST'])
+@app.route('/delete_post/<int:post_id>', methods=['POST'])
 def delete_post(post_id):
     if 'username' in session:
         db = get_db()
